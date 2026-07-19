@@ -1,0 +1,375 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ---------- KPI tiles ---------- */
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 992px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .kpi-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.kpi-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  margin-top: 2px;
+}
+
+.kpi-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 650;
+}
+
+.kpi-delta.delta-up {
+  color: #065f46;
+}
+
+.kpi-delta.delta-down {
+  color: #dc2626;
+}
+
+.kpi-delta-label {
+  color: var(--color-text-secondary);
+}
+
+.kpi-sparkline {
+  width: 100%;
+  height: 30px;
+  margin-top: 6px;
+  color: var(--color-accent);
+  opacity: 0.85;
+}
+
+/* ---------- Dashboard grid ---------- */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dash-col-main,
+.dash-col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card-heading {
+  padding: 16px 20px 4px;
+}
+
+.card-heading h2 {
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.card-heading p {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 0;
+}
+
+/* ---------- Revenue bar chart ---------- */
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 180px;
+  padding: 16px 20px 20px;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bar-fill {
+  width: 56%;
+  min-height: 3px;
+  border-radius: 4px 4px 0 0;
+  background: var(--color-accent);
+  transition: height 0.3s ease, background 0.15s ease;
+}
+
+.bar-fill:hover {
+  background: color-mix(in srgb, var(--color-accent) 85%, black);
+}
+
+.bar-label {
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--color-text-secondary);
+}
+
+/* ---------- Order pipeline (ordinal ramp) ---------- */
+
+.stage-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 20px 20px;
+}
+
+.stage-row {
+  display: grid;
+  grid-template-columns: 84px 1fr 30px;
+  align-items: center;
+  gap: 12px;
+}
+
+.stage-name {
+  font-size: 12.5px;
+  font-weight: 550;
+  color: var(--color-text-secondary);
+}
+
+.stage-track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.stage-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.stage-fill-1 { background: color-mix(in oklch, var(--color-accent) 35%, var(--color-bg)); }
+.stage-fill-2 { background: color-mix(in oklch, var(--color-accent) 55%, var(--color-bg)); }
+.stage-fill-3 { background: color-mix(in oklch, var(--color-accent) 78%, var(--color-bg)); }
+.stage-fill-4 { background: var(--color-accent); }
+
+.stage-count {
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text);
+}
+
+/* ---------- Category breakdown ---------- */
+
+.category-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 14px 20px 20px;
+}
+
+.category-row {
+  display: grid;
+  grid-template-columns: 108px 1fr 26px;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-name {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.category-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-accent) 70%, var(--color-bg));
+  transition: width 0.3s ease;
+}
+
+.category-value {
+  font-size: 12.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text);
+}
+
+/* ---------- Invoice status ---------- */
+
+.invoice-status-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 16px;
+}
+
+.invoice-status-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.invoice-status-count {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.invoice-status-amount {
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  min-width: 76px;
+  text-align: right;
+}
+
+/* ---------- Recent activity ---------- */
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.activity-row:last-child {
+  border-bottom: none;
+}
+
+.activity-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.activity-icon-order { background: #eef2ff; color: #3730a3; }
+.activity-icon-invoice { background: #ecfdf5; color: #065f46; }
+.activity-icon-product { background: #fffbeb; color: #92400e; }
+
+.activity-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-title {
+  font-size: 13.5px;
+  font-weight: 550;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-amount {
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+.activity-time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  min-width: 56px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .activity-amount {
+    display: none;
+  }
+}

@@ -1,0 +1,173 @@
+<div class="page dashboard-page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Dashboard</h1>
+      <p class="page-subtitle mb-0">Live overview of sales, invoices, and inventory</p>
+    </div>
+
+    <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+      <span class="spinner" *ngIf="loading"></span>
+      <svg *ngIf="!loading" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15">
+        <path
+          d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="data-card" *ngIf="loading && !data">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading dashboard…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <div class="state-icon state-icon-error">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <p class="state-title">Couldn't load the dashboard</p>
+      <p class="state-subtitle">Try refreshing.</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="data as d">
+    <div class="kpi-grid">
+      <div class="kpi-tile" *ngFor="let kpi of d.kpis">
+        <span class="kpi-label">{{ kpi.label }}</span>
+        <span class="kpi-value">{{ kpi.value }}</span>
+        <div class="kpi-footer">
+          <span class="kpi-delta" [ngClass]="deltaClass(kpi)" *ngIf="kpi.trend.length">
+            <svg *ngIf="deltaClass(kpi) === 'delta-up'" viewBox="0 0 12 12" width="10" height="10" fill="none">
+              <path d="M6 9.5V2.5M6 2.5L2.5 6M6 2.5L9.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <svg *ngIf="deltaClass(kpi) === 'delta-down'" viewBox="0 0 12 12" width="10" height="10" fill="none">
+              <path d="M6 2.5V9.5M6 9.5L2.5 6M6 9.5L9.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            {{ kpi.delta }}%
+          </span>
+          <span class="kpi-delta-label">{{ kpi.deltaLabel }}</span>
+        </div>
+        <svg class="kpi-sparkline" *ngIf="kpi.trend.length" viewBox="0 0 100 28" preserveAspectRatio="none">
+          <polyline [attr.points]="sparklinePoints(kpi.trend)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="dash-col-main">
+        <div class="data-card chart-card">
+          <div class="card-heading">
+            <h2>Monthly Revenue</h2>
+            <p>Last 6 months</p>
+          </div>
+          <div class="bar-chart" role="img" aria-label="Monthly revenue, last six months">
+            <div class="bar-col" *ngFor="let m of d.monthlyRevenue">
+              <div class="bar-track">
+                <div
+                  class="bar-fill"
+                  [style.height.%]="barHeightPct(m.amount, revenueValues(d))"
+                  [attr.title]="m.month + ': ' + currency(m.amount)"
+                ></div>
+              </div>
+              <span class="bar-label">{{ m.month }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-heading">
+            <h2>Order Pipeline</h2>
+            <p>{{ d.cancelledOrders }} cancelled this period</p>
+          </div>
+          <div class="stage-bars">
+            <div class="stage-row" *ngFor="let s of d.orderStages; let idx = index">
+              <span class="stage-name">{{ s.stage }}</span>
+              <div class="stage-track">
+                <div
+                  class="stage-fill"
+                  [ngClass]="'stage-fill-' + (idx + 1)"
+                  [style.width.%]="stagePct(s.count, stageValues(d))"
+                ></div>
+              </div>
+              <span class="stage-count">{{ s.count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-col-side">
+        <div class="data-card">
+          <div class="card-heading">
+            <h2>Top Categories</h2>
+          </div>
+          <div class="category-bars">
+            <div class="category-row" *ngFor="let c of d.categoryBreakdown">
+              <span class="category-name">{{ c.category }}</span>
+              <div class="category-track">
+                <div class="category-fill" [style.width.%]="barHeightPct(c.value, categoryValues(d))"></div>
+              </div>
+              <span class="category-value">{{ c.value }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-heading">
+            <h2>Invoices by Status</h2>
+          </div>
+          <div class="invoice-status-list">
+            <div class="invoice-status-row" *ngFor="let s of d.invoiceStatus">
+              <span class="status-pill" [ngClass]="invoiceStatusClass(s.status)">
+                <span class="status-dot"></span>{{ s.status }}
+              </span>
+              <span class="invoice-status-count">{{ s.count }}</span>
+              <span class="invoice-status-amount">{{ currency(s.amount) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="card-heading">
+        <h2>Recent Activity</h2>
+      </div>
+      <div class="activity-list">
+        <div class="activity-row" *ngFor="let a of d.recentActivity">
+          <span class="activity-icon" [ngClass]="activityIconClass(a.kind)">
+            <svg *ngIf="a.kind === 'order'" viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            </svg>
+            <svg *ngIf="a.kind === 'invoice'" viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <rect x="5" y="3" width="10" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+              <path d="M7.5 7.5h5M7.5 10.5h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            </svg>
+            <svg *ngIf="a.kind === 'product'" viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+              <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+              <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+              <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+            </svg>
+          </span>
+          <div class="activity-body">
+            <span class="activity-title">{{ a.title }}</span>
+            <span class="activity-subtitle">{{ a.subtitle }}</span>
+          </div>
+          <span class="activity-amount" *ngIf="a.amount">{{ currency(a.amount) }}</span>
+          <span class="activity-time">{{ relativeTime(a.timestamp) }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
