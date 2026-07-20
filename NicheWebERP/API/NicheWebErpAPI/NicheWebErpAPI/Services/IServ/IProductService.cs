@@ -4,6 +4,7 @@ namespace NicheWebErpAPI.Services.IServ
 {
     public interface IProductService
     {
-        Task<IEnumerable<ProductListItemDto>> GetAllProductsAsync();
+        Task<PagedResultDto<ProductListItemDto>> GetAllProductsAsync(
+            int page, int pageSize, string? search, Guid? categoryId, Guid? labelId);
     }
 }

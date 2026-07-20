@@ -1,0 +1,150 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Retail Customers</h1>
+      <p class="page-subtitle mb-0">
+        {{ totalCount | number }} {{ totalCount === 1 ? 'customer' : 'customers' }}
+      </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="search-group">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
+          <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5" />
+          <path d="M18 18L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search name or email…"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+        />
+      </div>
+
+      <button type="button" class="btn-primary-action" (click)="openCreateForm()" *ngIf="!showCreateForm">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        New customer
+      </button>
+      <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="data-card create-card mb-3" *ngIf="showCreateForm">
+    <form (ngSubmit)="submitCreate()" class="create-form">
+      <div class="field-group">
+        <label class="form-label">First name</label>
+        <input type="text" class="form-control" name="firstName" [(ngModel)]="form.firstName" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Last name</label>
+        <input type="text" class="form-control" name="lastName" [(ngModel)]="form.lastName" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" [(ngModel)]="form.email" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-control" name="phoneNumber" [(ngModel)]="form.phoneNumber" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Address</label>
+        <input type="text" class="form-control" name="address" [(ngModel)]="form.address" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Suburb</label>
+        <input type="text" class="form-control" name="suburb" [(ngModel)]="form.suburb" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">State</label>
+        <input type="text" class="form-control" name="state" [(ngModel)]="form.state" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Postcode</label>
+        <input type="text" class="form-control" name="postCode" [(ngModel)]="form.postCode" />
+      </div>
+
+      <div class="alert-error" *ngIf="createError">{{ createError }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-action" [disabled]="creating">
+          <span class="spinner" *ngIf="creating"></span>
+          {{ creating ? 'Creating…' : 'Create customer' }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelCreate()" [disabled]="creating">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading customers…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <p class="state-title">Couldn't load customers</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div class="table-scroll" *ngIf="items.length; else empty">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of items">
+              <td class="cell-primary">{{ c.firstName }} {{ c.lastName }}</td>
+              <td>{{ c.email || '—' }}</td>
+              <td>{{ c.phoneNumber || '—' }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="c.isSuspended ? 'status-critical' : 'status-good'">
+                  <span class="status-dot"></span>{{ c.isSuspended ? 'Suspended' : 'Active' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #empty>
+        <div class="state-panel">
+          <p class="state-title">No customers found</p>
+        </div>
+      </ng-template>
+
+      <div class="pagination-bar" *ngIf="items.length">
+        <span class="pagination-range">
+          Showing {{ rangeStart | number }}–{{ rangeEnd | number }} of {{ totalCount | number }}
+        </span>
+        <div class="pagination-controls">
+          <button type="button" class="page-btn" [disabled]="page === 1" (click)="goToPage(page - 1)" aria-label="Previous page">
+            <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <span class="page-indicator">Page {{ page }} of {{ totalPages }}</span>
+          <button type="button" class="page-btn" [disabled]="page === totalPages" (click)="goToPage(page + 1)" aria-label="Next page">
+            <svg viewBox="0 0 20 20" fill="none" width="14" height="14">
+              <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>

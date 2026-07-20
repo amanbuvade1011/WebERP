@@ -2,34 +2,18 @@
   <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
     <div>
       <h1 class="page-title mb-1">Company</h1>
-      <p class="page-subtitle mb-0">
-        {{ filteredCompanies.length | number }} {{ filteredCompanies.length === 1 ? 'entity' : 'entities' }}
-      </p>
+      <p class="page-subtitle mb-0">Your organization's profile and business details</p>
     </div>
 
-    <div class="d-flex gap-2 flex-wrap">
-      <div class="search-group">
-        <svg class="search-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-          <circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.5" />
-          <path d="M18 18L13.5 13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+    <div class="d-flex gap-2 flex-wrap" *ngIf="!loading && !error && company && !editing">
+      <button type="button" class="btn-secondary-action" (click)="startEdit()">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M13.5 3.5l3 3L6 17H3v-3L13.5 3.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
         </svg>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search company, code, location…"
-          [(ngModel)]="searchTerm"
-          (ngModelChange)="applyFilter()"
-        />
-        <button type="button" class="search-clear" *ngIf="searchTerm" (click)="clearSearch()" aria-label="Clear search">
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="12" height="12">
-            <path d="M4 4L16 16M16 4L4 16" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" />
-          </svg>
-        </button>
-      </div>
-
+        Edit profile
+      </button>
       <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
-        <span class="spinner" *ngIf="loading"></span>
-        <svg *ngIf="!loading" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
           <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Refresh
@@ -40,75 +24,130 @@
   <div class="data-card" *ngIf="loading">
     <div class="state-panel">
       <span class="spinner spinner-lg"></span>
-      <p class="state-title">Loading companies…</p>
+      <p class="state-title">Loading company profile…</p>
     </div>
   </div>
 
   <div class="data-card" *ngIf="!loading && error">
     <div class="state-panel">
       <div class="state-icon state-icon-error">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
           <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
           <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         </svg>
       </div>
-      <p class="state-title">Couldn't load companies</p>
-      <p class="state-subtitle">Try refreshing.</p>
+      <p class="state-title">Couldn't load the company profile</p>
       <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
     </div>
   </div>
 
-  <ng-container *ngIf="!loading && !error">
-    <div class="company-grid" *ngIf="filteredCompanies.length; else empty">
-      <div class="company-card" *ngFor="let c of filteredCompanies">
-        <div class="company-card-top">
-          <span class="company-avatar" [ngClass]="avatarColor(c.code)">{{ initials(c.name) }}</span>
-          <span class="status-pill" [ngClass]="c.status === 'Active' ? 'status-good' : 'status-neutral'">
-            <span class="status-dot"></span>{{ c.status }}
+  <ng-container *ngIf="!loading && !error && company">
+    <!-- Read-only profile -->
+    <div class="data-card profile-card" *ngIf="!editing">
+      <div class="profile-header">
+        <span class="company-avatar">{{ (company.name || company.code || '?').charAt(0) }}</span>
+        <div>
+          <h2 class="profile-name">{{ company.name || 'Unnamed company' }}</h2>
+          <p class="profile-code">{{ company.code }}</p>
+        </div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-field">
+          <span class="profile-label">Address</span>
+          <span class="profile-value">{{ company.address || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Suburb / State / Postcode</span>
+          <span class="profile-value">
+            {{ company.suburb || '—' }}, {{ company.state || '—' }} {{ company.postcode || '' }}
           </span>
         </div>
-
-        <h3 class="company-name">{{ c.name }}</h3>
-        <p class="company-code">{{ c.code }}</p>
-
-        <dl class="company-meta">
-          <div class="company-meta-row">
-            <dt>Tax ID</dt>
-            <dd>{{ c.taxId }}</dd>
-          </div>
-          <div class="company-meta-row">
-            <dt>Location</dt>
-            <dd>{{ c.location }}</dd>
-          </div>
-          <div class="company-meta-row">
-            <dt>Email</dt>
-            <dd class="truncate">{{ c.contactEmail }}</dd>
-          </div>
-          <div class="company-meta-row">
-            <dt>Phone</dt>
-            <dd>{{ c.contactPhone }}</dd>
-          </div>
-        </dl>
-
-        <div class="company-card-footer">
-          <span class="company-employees">{{ c.employees | number }} employees</span>
+        <div class="profile-field">
+          <span class="profile-label">Phone</span>
+          <span class="profile-value">{{ company.phone1 || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Secondary phone</span>
+          <span class="profile-value">{{ company.phone2 || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Fax</span>
+          <span class="profile-value">{{ company.fax || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">General email</span>
+          <span class="profile-value">{{ company.generalEmail || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Company number 1</span>
+          <span class="profile-value">{{ company.companyNumber1 || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Company number 2</span>
+          <span class="profile-value">{{ company.companyNumber2 || '—' }}</span>
         </div>
       </div>
     </div>
 
-    <ng-template #empty>
-      <div class="data-card">
-        <div class="state-panel">
-          <div class="state-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
-              <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.5" />
-              <path d="M19.5 19.5L15 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            </svg>
-          </div>
-          <p class="state-title">No companies found</p>
-          <p class="state-subtitle">Try a different search term.</p>
+    <!-- Edit form -->
+    <form class="data-card profile-card" *ngIf="editing" (ngSubmit)="save()">
+      <h2 class="profile-name mb-3">Edit company profile</h2>
+
+      <div class="profile-form-grid">
+        <div class="field-group">
+          <label class="form-label">Name</label>
+          <input type="text" class="form-control" name="name" [(ngModel)]="form.name" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-control" name="address" [(ngModel)]="form.address" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Suburb</label>
+          <input type="text" class="form-control" name="suburb" [(ngModel)]="form.suburb" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">State</label>
+          <input type="text" class="form-control" name="state" [(ngModel)]="form.state" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Postcode</label>
+          <input type="text" class="form-control" name="postcode" [(ngModel)]="form.postcode" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Phone</label>
+          <input type="text" class="form-control" name="phone1" [(ngModel)]="form.phone1" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Secondary phone</label>
+          <input type="text" class="form-control" name="phone2" [(ngModel)]="form.phone2" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Fax</label>
+          <input type="text" class="form-control" name="fax" [(ngModel)]="form.fax" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">General email</label>
+          <input type="email" class="form-control" name="generalEmail" [(ngModel)]="form.generalEmail" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Company number 1</label>
+          <input type="text" class="form-control" name="companyNumber1" [(ngModel)]="form.companyNumber1" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Company number 2</label>
+          <input type="text" class="form-control" name="companyNumber2" [(ngModel)]="form.companyNumber2" />
         </div>
       </div>
-    </ng-template>
+
+      <div class="d-flex gap-2 mt-4">
+        <button type="submit" class="btn-primary-action" [disabled]="saving">
+          <span class="spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : 'Save changes' }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelEdit()" [disabled]="saving">Cancel</button>
+      </div>
+    </form>
   </ng-container>
 </div>

@@ -18,7 +18,7 @@ export interface CategoryBreakdownItem {
 }
 
 export interface OrderStageBreakdown {
-  stage: 'Pending' | 'Confirmed' | 'Shipped' | 'Delivered';
+  stage: 'Draft' | 'Confirmed' | 'Shipped' | 'Delivered';
   count: number;
 }
 

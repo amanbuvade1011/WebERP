@@ -1,0 +1,106 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Locations</h1>
+      <p class="page-subtitle mb-0">
+        {{ locations.length | number }} {{ locations.length === 1 ? 'location' : 'locations' }}
+      </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn-primary-action" (click)="openCreateForm()" *ngIf="!showCreateForm">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        Add location
+      </button>
+      <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="data-card create-card mb-3" *ngIf="showCreateForm">
+    <form (ngSubmit)="submitCreate()" class="create-form">
+      <div class="field-group">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" name="name" [(ngModel)]="form.name" placeholder="e.g. Melbourne Warehouse" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Code</label>
+        <input type="text" class="form-control" name="code" [(ngModel)]="form.code" placeholder="e.g. MEL-WH" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Parent location</label>
+        <select class="form-control" name="parentId" [(ngModel)]="form.parentId">
+          <option *ngFor="let l of locations" [value]="l.id">{{ l.name }}</option>
+        </select>
+      </div>
+
+      <div class="alert-error" *ngIf="createError">{{ createError }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-action" [disabled]="creating">
+          <span class="spinner" *ngIf="creating"></span>
+          {{ creating ? 'Creating…' : 'Create location' }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelCreate()" [disabled]="creating">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading locations…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <div class="state-icon state-icon-error">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <p class="state-title">Couldn't load locations</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div class="table-scroll" *ngIf="locations.length; else empty">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Code</th>
+              <th>Parent</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of locations">
+              <td class="cell-primary">{{ l.name }}</td>
+              <td class="cell-code">{{ l.code || '—' }}</td>
+              <td>{{ parentName(l.parentId) }}</td>
+              <td>
+                <span class="status-pill" [ngClass]="l.inactive ? 'status-neutral' : 'status-good'">
+                  <span class="status-dot"></span>{{ l.inactive ? 'Inactive' : 'Active' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #empty>
+        <div class="state-panel">
+          <p class="state-title">No locations yet</p>
+          <p class="state-subtitle">Add one to get started.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>

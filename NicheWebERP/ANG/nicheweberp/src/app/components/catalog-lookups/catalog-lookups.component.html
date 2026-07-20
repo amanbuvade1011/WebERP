@@ -1,0 +1,51 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Catalog lookups</h1>
+      <p class="page-subtitle mb-0">Labels, ranges, and seasons used across styles (read-only for now)</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+      <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+        <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="data-card" *ngIf="loading">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <p class="state-title">Couldn't load lookups</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+  </div>
+
+  <div class="lookup-grid" *ngIf="!loading && !error">
+    <div class="data-card lookup-card">
+      <h2 class="section-title mb-2">Labels <span class="count-badge">{{ labels.length }}</span></h2>
+      <ul class="lookup-list">
+        <li *ngFor="let l of labels">{{ l.description }}</li>
+      </ul>
+    </div>
+
+    <div class="data-card lookup-card">
+      <h2 class="section-title mb-2">Ranges <span class="count-badge">{{ flatRanges.length }}</span></h2>
+      <ul class="lookup-list">
+        <li *ngFor="let r of flatRanges" [style.paddingLeft.px]="r.depth * 14">{{ r.label }}</li>
+      </ul>
+    </div>
+
+    <div class="data-card lookup-card">
+      <h2 class="section-title mb-2">Seasons <span class="count-badge">{{ seasons.length }}</span></h2>
+      <ul class="lookup-list">
+        <li *ngFor="let s of seasons">{{ s.description }} <span class="cell-secondary">({{ s.code }})</span></li>
+      </ul>
+    </div>
+  </div>
+</div>

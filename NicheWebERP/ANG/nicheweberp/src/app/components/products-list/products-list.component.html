@@ -3,10 +3,7 @@
     <div>
       <h1 class="page-title mb-1">Products</h1>
       <p class="page-subtitle mb-0">
-        {{ filteredProducts.length | number }} {{ filteredProducts.length === 1 ? 'style' : 'styles' }}
-        <span *ngIf="searchTerm && filteredProducts.length !== products.length">
-          of {{ products.length | number }}
-        </span>
+        {{ totalCount | number }} {{ totalCount === 1 ? 'style' : 'styles' }}
       </p>
     </div>
 
@@ -21,7 +18,7 @@
           class="search-input"
           placeholder="Search style, garment, category…"
           [(ngModel)]="searchTerm"
-          (ngModelChange)="applyFilter()"
+          (ngModelChange)="onSearchChange()"
         />
         <button
           type="button"
@@ -71,7 +68,7 @@
     </div>
 
     <ng-container *ngIf="!loading && !error">
-      <div class="table-scroll" *ngIf="filteredProducts.length; else empty">
+      <div class="table-scroll" *ngIf="items.length; else empty">
         <table class="data-table">
           <thead>
             <tr>
@@ -82,7 +79,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let p of pagedProducts">
+            <tr *ngFor="let p of items">
               <td class="cell-code">{{ p.styleCode }}</td>
               <td class="cell-primary">{{ p.garment }}</td>
               <td>
@@ -111,9 +108,9 @@
         </div>
       </ng-template>
 
-      <div class="pagination-bar" *ngIf="filteredProducts.length">
+      <div class="pagination-bar" *ngIf="items.length">
         <span class="pagination-range">
-          Showing {{ rangeStart | number }}–{{ rangeEnd | number }} of {{ filteredProducts.length | number }}
+          Showing {{ rangeStart | number }}–{{ rangeEnd | number }} of {{ totalCount | number }}
         </span>
         <div class="pagination-controls">
           <button type="button" class="page-btn" [disabled]="page === 1" (click)="goToPage(page - 1)" aria-label="Previous page">

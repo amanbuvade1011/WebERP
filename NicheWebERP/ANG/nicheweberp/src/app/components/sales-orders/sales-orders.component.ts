@@ -1,33 +1,37 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { map } from 'rxjs/operators';
 import { SalesOrderService } from '../../services/sales-order.service';
-import { SalesOrder, SalesOrderStatus } from '../../models/sales-order.model';
+import { FirmService } from '../../services/firm.service';
+import { SALES_ORDER_STATUS_NAMES, SALES_ORDER_STATUS_VALUES, SalesOrderListItem, SalesOrderStatus } from '../../models/sales-order.model';
+import { EntityOption, EntityPickerComponent } from '../entity-picker/entity-picker.component';
 
-const STATUS_FILTERS: readonly (SalesOrderStatus | 'All')[] = [
-  'All', 'Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'
-];
+const STATUS_FILTERS: readonly (SalesOrderStatus | 'All')[] = ['All', ...SALES_ORDER_STATUS_NAMES];
 
 @Component({
   selector: 'app-sales-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, EntityPickerComponent],
   templateUrl: './sales-orders.component.html',
   styleUrls: ['./sales-orders.component.css', '../../shared/list-page.css']
 })
 export class SalesOrdersComponent implements OnInit {
-  orders: SalesOrder[] = [];
-  filteredOrders: SalesOrder[] = [];
-  searchTerm = '';
+  items: SalesOrderListItem[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
   statusFilter: SalesOrderStatus | 'All' = 'All';
   statusOptions = STATUS_FILTERS;
+  firmFilterId: string | null = null;
+  firmFilterLabel = '';
+  dateFrom = '';
+  dateTo = '';
   loading = true;
   error = false;
 
-  pageSize = 20;
-  page = 1;
-
-  constructor(private salesOrderService: SalesOrderService) {}
+  constructor(private salesOrderService: SalesOrderService, private firmService: FirmService, private router: Router) {}
 
   ngOnInit(): void {
     this.fetch();
@@ -37,64 +41,87 @@ export class SalesOrdersComponent implements OnInit {
     this.fetch();
   }
 
+  onFilterChange(): void {
+    this.page = 1;
+    this.fetch();
+  }
+
+  // GetAllSalesOrders only filters by status/firmId/date range (no free-text search) - so
+  // "customer" filtering is a firm quick-jump, same generic contract as FirmsListComponent's.
+  firmSearch = (term: string) =>
+    this.firmService
+      .getAllFirms({ page: 1, pageSize: 10, search: term })
+      .pipe(map((result): EntityOption[] => result.items.map((f) => ({
+        id: f.id,
+        label: f.tradingName,
+        sublabel: f.code || undefined
+      }))));
+
+  onFirmSelected(option: EntityOption): void {
+    this.firmFilterId = option.id;
+    this.firmFilterLabel = option.label;
+    this.onFilterChange();
+  }
+
+  clearFirmFilter(): void {
+    this.firmFilterId = null;
+    this.firmFilterLabel = '';
+    this.onFilterChange();
+  }
+
   private fetch(): void {
     this.loading = true;
     this.error = false;
-    this.salesOrderService.getAllOrders().subscribe({
-      next: (data) => {
-        this.orders = data;
-        this.applyFilter();
-        this.loading = false;
-      },
-      error: () => {
-        this.error = true;
-        this.loading = false;
-      }
-    });
-  }
-
-  applyFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredOrders = this.orders.filter((o) => {
-      const matchesStatus = this.statusFilter === 'All' || o.status === this.statusFilter;
-      const matchesTerm =
-        !term ||
-        o.orderNo.toLowerCase().includes(term) ||
-        o.customer.toLowerCase().includes(term);
-      return matchesStatus && matchesTerm;
-    });
-    this.page = 1;
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
+    this.salesOrderService
+      .getAllOrders({
+        page: this.page,
+        pageSize: this.pageSize,
+        status: this.statusFilter === 'All' ? undefined : SALES_ORDER_STATUS_VALUES[this.statusFilter],
+        firmId: this.firmFilterId || undefined,
+        dateFrom: this.dateFrom || undefined,
+        dateTo: this.dateTo || undefined
+      })
+      .subscribe({
+        next: (result) => {
+          this.items = result.items;
+          this.totalCount = result.totalCount;
+          this.loading = false;
+        },
+        error: () => {
+          this.error = true;
+          this.loading = false;
+        }
+      });
   }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filteredOrders.length / this.pageSize));
-  }
-
-  get pagedOrders(): SalesOrder[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filteredOrders.slice(start, start + this.pageSize);
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
   }
 
   get rangeStart(): number {
-    return this.filteredOrders.length === 0 ? 0 : (this.page - 1) * this.pageSize + 1;
+    return this.totalCount === 0 ? 0 : (this.page - 1) * this.pageSize + 1;
   }
 
   get rangeEnd(): number {
-    return Math.min(this.page * this.pageSize, this.filteredOrders.length);
+    return Math.min(this.page * this.pageSize, this.totalCount);
   }
 
   goToPage(page: number): void {
     this.page = Math.min(Math.max(page, 1), this.totalPages);
+    this.fetch();
+  }
+
+  openOrder(id: string): void {
+    this.router.navigate(['/sales-orders', id]);
+  }
+
+  createOrder(): void {
+    this.router.navigate(['/sales-orders', 'new']);
   }
 
   statusClass(status: SalesOrderStatus): string {
     switch (status) {
-      case 'Pending':
+      case 'Draft':
         return 'status-warning';
       case 'Confirmed':
         return 'cat-sky';
@@ -111,7 +138,8 @@ export class SalesOrdersComponent implements OnInit {
     return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   }
 
-  formatDate(iso: string): string {
+  formatDate(iso: string | null): string {
+    if (!iso) return '—';
     return new Date(iso).toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 }

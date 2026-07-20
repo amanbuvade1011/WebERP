@@ -1,0 +1,133 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using NicheWebErpAPI.Dtos;
+using NicheWebErpAPI.Services.IServ;
+
+namespace NicheWebErpAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    [Authorize]
+    public class SalesOrdersController : ControllerBase
+    {
+        private readonly ISalesOrderService _salesOrderService;
+
+        public SalesOrdersController(ISalesOrderService salesOrderService)
+        {
+            _salesOrderService = salesOrderService;
+        }
+
+        // GET api/SalesOrders/GetAllSalesOrders
+        [HttpGet("GetAllSalesOrders")]
+        public async Task<ActionResult<PagedResultDto<SalesOrderListItemDto>>> GetAllSalesOrders(
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 25, [FromQuery] int? status = null,
+            [FromQuery] Guid? firmId = null, [FromQuery] DateTime? dateFrom = null, [FromQuery] DateTime? dateTo = null)
+        {
+            return Ok(await _salesOrderService.GetPagedAsync(page, pageSize, status, firmId, dateFrom, dateTo));
+        }
+
+        // GET api/SalesOrders/GetSalesOrderById/{id}
+        [HttpGet("GetSalesOrderById/{id:guid}")]
+        public async Task<ActionResult<SalesOrderDetailDto>> GetSalesOrderById(Guid id)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.GetByIdAsync(id));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        // POST api/SalesOrders/CreateSalesOrder
+        [HttpPost("CreateSalesOrder")]
+        public async Task<ActionResult<SalesOrderDetailDto>> CreateSalesOrder(CreateSalesOrderDto dto)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.CreateAsync(dto));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // PUT api/SalesOrders/{id}/UpdateStatus
+        [HttpPut("{id:guid}/UpdateStatus")]
+        public async Task<ActionResult<SalesOrderDetailDto>> UpdateStatus(Guid id, UpdateSalesOrderStatusDto dto)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.UpdateStatusAsync(id, dto));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST api/SalesOrders/{id}/AddLine
+        [HttpPost("{id:guid}/AddLine")]
+        public async Task<ActionResult<SalesOrderDetailDto>> AddLine(Guid id, AddSalesOrderLineDto dto)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.AddLineAsync(id, dto));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // PUT api/SalesOrders/{id}/UpdateLine/{lineId}
+        [HttpPut("{id:guid}/UpdateLine/{lineId:guid}")]
+        public async Task<ActionResult<SalesOrderDetailDto>> UpdateLine(Guid id, Guid lineId, UpdateSalesOrderLineDto dto)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.UpdateLineAsync(id, lineId, dto));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // DELETE api/SalesOrders/{id}/RemoveLine/{lineId}
+        [HttpDelete("{id:guid}/RemoveLine/{lineId:guid}")]
+        public async Task<ActionResult<SalesOrderDetailDto>> RemoveLine(Guid id, Guid lineId)
+        {
+            try
+            {
+                return Ok(await _salesOrderService.RemoveLineAsync(id, lineId));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+    }
+}

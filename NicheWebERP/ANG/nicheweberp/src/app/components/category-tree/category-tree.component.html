@@ -1,0 +1,75 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Categories</h1>
+      <p class="page-subtitle mb-0">Product category tree</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn-primary-action" (click)="startAdd(null)" *ngIf="addingUnderId === null">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        Add root category
+      </button>
+      <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="data-card mb-3" *ngIf="addingUnderId === 'root'">
+    <div class="add-form">
+      <input type="text" class="form-control" placeholder="New root category name" [(ngModel)]="newCategoryName" name="newCategoryName" />
+      <button type="button" class="btn-primary-action" (click)="submitAdd()" [disabled]="adding">
+        <span class="spinner" *ngIf="adding"></span>
+        Create
+      </button>
+      <button type="button" class="btn-secondary-action" (click)="cancelAdd()" [disabled]="adding">Cancel</button>
+    </div>
+    <div class="alert-error mt-2" *ngIf="addError">{{ addError }}</div>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading categories…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <p class="state-title">Couldn't load categories</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <div class="tree-container" *ngIf="!loading && !error">
+      <ng-container *ngTemplateOutlet="nodeList; context: { $implicit: tree }"></ng-container>
+
+      <ng-template #nodeList let-nodes>
+        <ul class="tree-list">
+          <li class="tree-item" *ngFor="let node of nodes">
+            <div class="tree-row">
+              <span class="tree-label">{{ node.description }}</span>
+              <span class="status-pill status-neutral" *ngIf="node.inactive">
+                <span class="status-dot"></span>Inactive
+              </span>
+              <button type="button" class="row-action" (click)="startAdd(node.id)">+ Add child</button>
+            </div>
+
+            <div class="data-card add-form-inline" *ngIf="addingUnderId === node.id">
+              <input type="text" class="form-control" placeholder="New child category name" [(ngModel)]="newCategoryName" name="newCategoryName" />
+              <button type="button" class="btn-primary-action btn-sm" (click)="submitAdd()" [disabled]="adding">Create</button>
+              <button type="button" class="btn-secondary-action btn-sm" (click)="cancelAdd()" [disabled]="adding">Cancel</button>
+            </div>
+            <div class="alert-error mt-1" *ngIf="addingUnderId === node.id && addError">{{ addError }}</div>
+
+            <ng-container *ngIf="node.children.length" [ngTemplateOutlet]="nodeList" [ngTemplateOutletContext]="{ $implicit: node.children }"></ng-container>
+          </li>
+        </ul>
+      </ng-template>
+
+      <p class="state-subtitle p-3" *ngIf="!tree.length">No categories yet.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<button
+  type="button"
+  class="theme-toggle"
+  (click)="themeService.toggle()"
+  [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+  [title]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+>
+  <svg *ngIf="!themeService.isDark()" viewBox="0 0 20 20" fill="none" width="16" height="16">
+    <circle cx="10" cy="10" r="4" stroke="currentColor" stroke-width="1.5" />
+    <path
+      d="M10 2.5v1.7M10 15.8v1.7M17.5 10h-1.7M4.2 10H2.5M15.3 4.7l-1.2 1.2M5.9 14.1l-1.2 1.2M15.3 15.3l-1.2-1.2M5.9 5.9L4.7 4.7"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linecap="round"
+    />
+  </svg>
+  <svg *ngIf="themeService.isDark()" viewBox="0 0 20 20" fill="none" width="16" height="16">
+    <path
+      d="M17 11.3A7 7 0 1 1 8.7 3a5.6 5.6 0 0 0 8.3 8.3z"
+      stroke="currentColor"
+      stroke-width="1.5"
+      stroke-linejoin="round"
+    />
+  </svg>
+</button>

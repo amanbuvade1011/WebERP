@@ -1,0 +1,209 @@
+<div class="page">
+  <div class="page-header d-flex align-items-center gap-3">
+    <button type="button" class="back-btn" (click)="goBack()" aria-label="Back to styles">
+      <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+        <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div>
+      <h1 class="page-title mb-1">{{ isNew ? 'New style' : (style?.code || 'Style') }}</h1>
+      <p class="page-subtitle mb-0">{{ isNew ? 'Create a new garment style' : style?.description }}</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="loading">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <div class="state-icon state-icon-error">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <p class="state-title">Couldn't load this style</p>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <form class="data-card profile-card mb-3" (ngSubmit)="save()">
+      <h2 class="section-title mb-3">Details</h2>
+
+      <div class="profile-form-grid">
+        <div class="field-group" *ngIf="isNew">
+          <label class="form-label">Code</label>
+          <input type="text" class="form-control" name="code" [(ngModel)]="form.code" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Description</label>
+          <input type="text" class="form-control" name="description" [(ngModel)]="form.description" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Web description</label>
+          <input type="text" class="form-control" name="webDescription" [(ngModel)]="form.webDescription" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Weight</label>
+          <input type="number" step="0.01" class="form-control" name="weight" [(ngModel)]="form.weight" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Sizeway</label>
+          <select class="form-control" name="sizewayId" [(ngModel)]="form.sizewayId">
+            <option value="" disabled>Select a sizeway…</option>
+            <option *ngFor="let sw of sizeways" [value]="sw.id">{{ sw.description }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Category</label>
+          <select class="form-control" name="categoryId" [(ngModel)]="form.categoryId">
+            <option value="">None</option>
+            <option *ngFor="let c of flatCategories" [value]="c.id">{{ c.label }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Label</label>
+          <select class="form-control" name="labelId" [(ngModel)]="form.labelId">
+            <option value="">None</option>
+            <option *ngFor="let l of labels" [value]="l.id">{{ l.description }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Range</label>
+          <select class="form-control" name="rangeId" [(ngModel)]="form.rangeId">
+            <option value="" disabled>Select a range…</option>
+            <option *ngFor="let r of flatRanges" [value]="r.id">{{ r.label }}</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Delivery period</label>
+          <input type="text" class="form-control" name="deliveryPeriod" [(ngModel)]="form.deliveryPeriod" />
+        </div>
+        <div class="field-group field-group-checkbox" *ngIf="!isNew">
+          <label class="form-label">&nbsp;</label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="inactive" [(ngModel)]="form.inactive" />
+            Inactive
+          </label>
+        </div>
+      </div>
+
+      <div class="alert-error mt-3" *ngIf="saveError">{{ saveError }}</div>
+
+      <button type="submit" class="btn-primary-action mt-3" [disabled]="saving">
+        <span class="spinner" *ngIf="saving"></span>
+        {{ saving ? 'Saving…' : (isNew ? 'Create style' : 'Save changes') }}
+      </button>
+    </form>
+
+    <div class="data-card profile-card mb-3" *ngIf="!isNew && style">
+      <h2 class="section-title mb-3">Colors</h2>
+
+      <div class="color-rows mb-3" *ngIf="style.colors.length; else noColors">
+        <div class="color-row" *ngFor="let c of style.colors">
+          <span class="chip chip-outline color-chip">
+            <span class="swatch" [style.background]="c.rgbValue ? '#' + c.rgbValue : 'var(--color-border)'"></span>
+            {{ c.color }}
+          </span>
+          <div class="color-row-actions">
+            <button type="button" class="row-action" (click)="generateProducts(c.id)" [disabled]="generatingColorId === c.id">
+              {{ generatingColorId === c.id ? 'Generating…' : 'Generate products' }}
+            </button>
+            <button type="button" class="row-action" (click)="viewStock(c.id)">View stock</button>
+          </div>
+        </div>
+      </div>
+      <ng-template #noColors>
+        <p class="state-subtitle mb-3">No colors added yet.</p>
+      </ng-template>
+
+      <div class="add-color-row">
+        <input type="text" class="form-control" placeholder="Color name (e.g. Navy)" [(ngModel)]="newColorName" name="newColorName" />
+        <input type="text" class="form-control" placeholder="RGB hex (optional, e.g. 001F3F)" [(ngModel)]="newColorRgb" name="newColorRgb" />
+        <button type="button" class="btn-secondary-action" (click)="addColor()" [disabled]="addingColor || !newColorName">
+          <span class="spinner" *ngIf="addingColor"></span>
+          Add color
+        </button>
+      </div>
+      <div class="alert-error mt-2" *ngIf="addColorError">{{ addColorError }}</div>
+      <div class="alert-success mt-2" *ngIf="generateMessage">{{ generateMessage }}</div>
+      <div class="alert-error mt-2" *ngIf="generateError">{{ generateError }}</div>
+    </div>
+
+    <div class="data-card profile-card mb-3" *ngIf="!isNew && style">
+      <h2 class="section-title mb-3">Prices</h2>
+
+      <div class="table-scroll" *ngIf="priceRows.length; else noPricePoints">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Price point</th>
+              <th>Local ex-tax</th>
+              <th>Local tax</th>
+              <th>Intl ex-tax</th>
+              <th>Intl tax</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of priceRows">
+              <td class="cell-primary">{{ row.pricePointName || '—' }}</td>
+              <td><input type="number" step="0.01" class="form-control cell-input" [(ngModel)]="row.localUnitPriceExTax1" [name]="'localEx-' + row.pricePointId" /></td>
+              <td><input type="number" step="0.01" class="form-control cell-input" [(ngModel)]="row.localUnitPriceTax1" [name]="'localTax-' + row.pricePointId" /></td>
+              <td><input type="number" step="0.01" class="form-control cell-input" [(ngModel)]="row.internationalUnitPriceExTax1" [name]="'intlEx-' + row.pricePointId" /></td>
+              <td><input type="number" step="0.01" class="form-control cell-input" [(ngModel)]="row.internationalUnitPriceTax1" [name]="'intlTax-' + row.pricePointId" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noPricePoints>
+        <p class="state-subtitle mb-3">No price points configured.</p>
+      </ng-template>
+
+      <button type="button" class="btn-primary-action mt-3" (click)="savePrices()" [disabled]="savingPrices || !priceRows.length">
+        <span class="spinner" *ngIf="savingPrices"></span>
+        {{ savingPrices ? 'Saving…' : 'Save prices' }}
+      </button>
+      <div class="alert-error mt-2" *ngIf="priceError">{{ priceError }}</div>
+    </div>
+
+    <div class="data-card profile-card" *ngIf="!isNew && style">
+      <h2 class="section-title mb-3">Sell locations</h2>
+
+      <div class="table-scroll" *ngIf="sellLocationRows.length; else noLocations">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Location</th>
+              <th>Retail</th>
+              <th>Web retail</th>
+              <th>Rental</th>
+              <th>Wholesale indent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of sellLocationRows">
+              <td class="cell-primary">{{ row.locationName || '—' }}</td>
+              <td><input type="checkbox" [(ngModel)]="row.allowRetail" [name]="'retail-' + row.locationId" /></td>
+              <td><input type="checkbox" [(ngModel)]="row.allowWebRetail" [name]="'web-' + row.locationId" /></td>
+              <td><input type="checkbox" [(ngModel)]="row.allowRental" [name]="'rental-' + row.locationId" /></td>
+              <td><input type="checkbox" [(ngModel)]="row.allowWholesaleIndent" [name]="'wholesale-' + row.locationId" /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noLocations>
+        <p class="state-subtitle mb-3">No locations configured.</p>
+      </ng-template>
+
+      <button type="button" class="btn-primary-action mt-3" (click)="saveSellLocations()" [disabled]="savingSellLocations || !sellLocationRows.length">
+        <span class="spinner" *ngIf="savingSellLocations"></span>
+        {{ savingSellLocations ? 'Saving…' : 'Save sell locations' }}
+      </button>
+      <div class="alert-error mt-2" *ngIf="sellLocationError">{{ sellLocationError }}</div>
+    </div>
+  </ng-container>
+</div>

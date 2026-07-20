@@ -4,6 +4,7 @@ namespace NicheWebErpAPI.Repository.IRepo
 {
     public interface IProductRepository
     {
-        Task<IEnumerable<ProductListItemDto>> GetAllProductsAsync();
+        Task<PagedResultDto<ProductListItemDto>> GetAllProductsAsync(
+            Guid companyId, int page, int pageSize, string? search, Guid? categoryId, Guid? labelId);
     }
 }

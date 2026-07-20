@@ -23,16 +23,16 @@ const CATEGORY_PALETTE = [
   styleUrls: ['./products-list.component.css', '../../shared/list-page.css']
 })
 export class ProductsListComponent implements OnInit {
-  products: ProductListItem[] = [];
-  filteredProducts: ProductListItem[] = [];
+  items: ProductListItem[] = [];
+  totalCount = 0;
+  page = 1;
+  pageSize = 25;
   searchTerm = '';
   loading = true;
   error = false;
 
-  pageSize = 25;
-  page = 1;
-
   private readonly categoryColorCache = new Map<string, string>();
+  private searchDebounce: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private productService: ProductService) {}
 
@@ -44,13 +44,29 @@ export class ProductsListComponent implements OnInit {
     this.fetchProducts();
   }
 
+  onSearchChange(): void {
+    if (this.searchDebounce) {
+      clearTimeout(this.searchDebounce);
+    }
+    this.searchDebounce = setTimeout(() => {
+      this.page = 1;
+      this.fetchProducts();
+    }, 300);
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.page = 1;
+    this.fetchProducts();
+  }
+
   private fetchProducts(): void {
     this.loading = true;
     this.error = false;
-    this.productService.getAllProducts().subscribe({
-      next: (data) => {
-        this.products = data;
-        this.applyFilter();
+    this.productService.getAllProducts({ page: this.page, pageSize: this.pageSize, search: this.searchTerm || undefined }).subscribe({
+      next: (result) => {
+        this.items = result.items;
+        this.totalCount = result.totalCount;
         this.loading = false;
       },
       error: () => {
@@ -60,42 +76,21 @@ export class ProductsListComponent implements OnInit {
     });
   }
 
-  applyFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredProducts = term
-      ? this.products.filter((p) =>
-          [p.styleCode, p.garment, p.category, p.label]
-            .filter((v): v is string => !!v)
-            .some((v) => v.toLowerCase().includes(term))
-        )
-      : this.products;
-    this.page = 1;
-  }
-
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filteredProducts.length / this.pageSize));
-  }
-
-  get pagedProducts(): ProductListItem[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filteredProducts.slice(start, start + this.pageSize);
+    return Math.max(1, Math.ceil(this.totalCount / this.pageSize));
   }
 
   get rangeStart(): number {
-    return this.filteredProducts.length === 0 ? 0 : (this.page - 1) * this.pageSize + 1;
+    return this.totalCount === 0 ? 0 : (this.page - 1) * this.pageSize + 1;
   }
 
   get rangeEnd(): number {
-    return Math.min(this.page * this.pageSize, this.filteredProducts.length);
+    return Math.min(this.page * this.pageSize, this.totalCount);
   }
 
   goToPage(page: number): void {
     this.page = Math.min(Math.max(page, 1), this.totalPages);
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
+    this.fetchProducts();
   }
 
   categoryColor(category: string | null): string {

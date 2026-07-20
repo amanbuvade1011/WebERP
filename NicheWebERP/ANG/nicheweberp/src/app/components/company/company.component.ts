@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CompanyService } from '../../services/company.service';
-import { Company } from '../../models/company.model';
-
-const AVATAR_PALETTE = ['cat-indigo', 'cat-emerald', 'cat-amber', 'cat-pink', 'cat-sky', 'cat-violet', 'cat-teal', 'cat-orange'];
+import { Company, UpdateCompanyRequest } from '../../models/company.model';
 
 @Component({
   selector: 'app-company',
@@ -14,10 +12,11 @@ const AVATAR_PALETTE = ['cat-indigo', 'cat-emerald', 'cat-amber', 'cat-pink', 'c
   styleUrls: ['./company.component.css', '../../shared/list-page.css']
 })
 export class CompanyComponent implements OnInit {
-  companies: Company[] = [];
-  filteredCompanies: Company[] = [];
-  searchTerm = '';
+  company: Company | null = null;
+  form: UpdateCompanyRequest = this.emptyForm();
+  editing = false;
   loading = true;
+  saving = false;
   error = false;
 
   constructor(private companyService: CompanyService) {}
@@ -33,10 +32,9 @@ export class CompanyComponent implements OnInit {
   private fetch(): void {
     this.loading = true;
     this.error = false;
-    this.companyService.getAllCompanies().subscribe({
+    this.companyService.getCurrentCompany().subscribe({
       next: (data) => {
-        this.companies = data;
-        this.applyFilter();
+        this.company = data;
         this.loading = false;
       },
       error: () => {
@@ -46,33 +44,59 @@ export class CompanyComponent implements OnInit {
     });
   }
 
-  applyFilter(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    this.filteredCompanies = term
-      ? this.companies.filter(
-          (c) =>
-            c.name.toLowerCase().includes(term) ||
-            c.code.toLowerCase().includes(term) ||
-            c.location.toLowerCase().includes(term)
-        )
-      : this.companies;
-  }
-
-  clearSearch(): void {
-    this.searchTerm = '';
-    this.applyFilter();
-  }
-
-  initials(name: string): string {
-    const words = name.replace(/[()]/g, '').split(' ').filter(Boolean);
-    return (words[0]?.[0] ?? '') + (words[1]?.[0] ?? '');
-  }
-
-  avatarColor(code: string): string {
-    let hash = 0;
-    for (let i = 0; i < code.length; i++) {
-      hash = (hash * 31 + code.charCodeAt(i)) >>> 0;
+  startEdit(): void {
+    if (!this.company) {
+      return;
     }
-    return AVATAR_PALETTE[hash % AVATAR_PALETTE.length];
+    this.form = {
+      name: this.company.name,
+      address: this.company.address,
+      suburb: this.company.suburb,
+      state: this.company.state,
+      postcode: this.company.postcode,
+      countryId: this.company.countryId,
+      phone1: this.company.phone1,
+      phone2: this.company.phone2,
+      fax: this.company.fax,
+      generalEmail: this.company.generalEmail,
+      companyNumber1: this.company.companyNumber1,
+      companyNumber2: this.company.companyNumber2
+    };
+    this.editing = true;
+  }
+
+  cancelEdit(): void {
+    this.editing = false;
+  }
+
+  save(): void {
+    this.saving = true;
+    this.companyService.updateCompany(this.form).subscribe({
+      next: (data) => {
+        this.company = data;
+        this.saving = false;
+        this.editing = false;
+      },
+      error: () => {
+        this.saving = false;
+      }
+    });
+  }
+
+  private emptyForm(): UpdateCompanyRequest {
+    return {
+      name: null,
+      address: null,
+      suburb: null,
+      state: null,
+      postcode: null,
+      countryId: null,
+      phone1: null,
+      phone2: null,
+      fax: null,
+      generalEmail: null,
+      companyNumber1: null,
+      companyNumber2: null
+    };
   }
 }

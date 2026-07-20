@@ -254,14 +254,14 @@
   font-weight: 500;
 }
 
-.cat-indigo { background: #eef2ff; color: #3730a3; }
-.cat-emerald { background: #ecfdf5; color: #065f46; }
-.cat-amber { background: #fffbeb; color: #92400e; }
-.cat-pink { background: #fdf2f8; color: #9d174d; }
-.cat-sky { background: #f0f9ff; color: #075985; }
-.cat-violet { background: #f5f3ff; color: #5b21b6; }
-.cat-teal { background: #f0fdfa; color: #115e59; }
-.cat-orange { background: #fff7ed; color: #9a3412; }
+.cat-indigo { background: var(--chip-indigo-bg); color: var(--chip-indigo-fg); }
+.cat-emerald { background: var(--chip-emerald-bg); color: var(--chip-emerald-fg); }
+.cat-amber { background: var(--chip-amber-bg); color: var(--chip-amber-fg); }
+.cat-pink { background: var(--chip-pink-bg); color: var(--chip-pink-fg); }
+.cat-sky { background: var(--chip-sky-bg); color: var(--chip-sky-fg); }
+.cat-violet { background: var(--chip-violet-bg); color: var(--chip-violet-fg); }
+.cat-teal { background: var(--chip-teal-bg); color: var(--chip-teal-fg); }
+.cat-orange { background: var(--chip-orange-bg); color: var(--chip-orange-fg); }
 .cat-neutral { background: var(--color-bg); color: var(--color-text-secondary); }
 
 /* ---------- Status pills (state — reserved meaning, always icon+label) ---------- */
@@ -286,10 +286,10 @@
   background: currentColor;
 }
 
-.status-good { background: #ecfdf5; color: #065f46; }
-.status-warning { background: #fffbeb; color: #92400e; }
-.status-critical { background: #fef2f2; color: #dc2626; }
-.status-info { background: #eff6ff; color: #1d4ed8; }
+.status-good { background: var(--status-good-bg); color: var(--status-good-fg); }
+.status-warning { background: var(--status-warning-bg); color: var(--status-warning-fg); }
+.status-critical { background: var(--status-critical-bg); color: var(--status-critical-fg); }
+.status-info { background: var(--status-info-bg); color: var(--status-info-fg); }
 .status-neutral { background: var(--color-bg); color: var(--color-text-secondary); }
 
 /* ---------- States (loading / error / empty) ---------- */
@@ -317,8 +317,8 @@
 }
 
 .state-icon-error {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--status-critical-bg);
+  color: var(--status-critical-fg);
 }
 
 .state-title {

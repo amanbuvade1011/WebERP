@@ -1,0 +1,58 @@
+<div class="page">
+  <div class="page-header d-flex align-items-center gap-3">
+    <button type="button" class="back-btn" (click)="goBack()" aria-label="Back to style">
+      <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+        <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div class="flex-grow-1">
+      <h1 class="page-title mb-1">Stock — {{ style?.code }} / {{ colorName }}</h1>
+      <p class="page-subtitle mb-0">Size × location stock levels</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+      <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+        <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading stock…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <p class="state-title">Couldn't load stock</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <div class="table-scroll" *ngIf="!loading && !error && sizes.length">
+      <table class="data-table grid-table">
+        <thead>
+          <tr>
+            <th>Location</th>
+            <th *ngFor="let size of sizes" class="text-center">{{ size }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let location of locations">
+            <td class="cell-primary">{{ location }}</td>
+            <td *ngFor="let size of sizes" class="text-center cell-stock">
+              <span class="stock-held">{{ cell(size, location).held }}</span>
+              <span class="stock-available" *ngIf="cell(size, location).available !== cell(size, location).held">
+                ({{ cell(size, location).available }} avail)
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && !error && !sizes.length">
+      <p class="state-title">No stock rows yet</p>
+      <p class="state-subtitle">Generate products for this color first, from the Style detail screen.</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,154 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">ERP Users</h1>
+      <p class="page-subtitle mb-0">
+        {{ users.length | number }} {{ users.length === 1 ? 'staff account' : 'staff accounts' }}
+        <span class="text-secondary">· internal ERP staff, not customers</span>
+      </p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn-primary-action" (click)="openCreateForm()" *ngIf="!showForm">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        Add user
+      </button>
+      <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="data-card create-card mb-3" *ngIf="showForm">
+    <form (ngSubmit)="submitForm()" class="create-form">
+      <div class="field-group">
+        <label class="form-label">First name</label>
+        <input type="text" class="form-control" name="firstName" [(ngModel)]="form.firstName" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Last name</label>
+        <input type="text" class="form-control" name="lastName" [(ngModel)]="form.lastName" />
+      </div>
+      <div class="field-group" *ngIf="formMode === 'create'">
+        <label class="form-label">Username</label>
+        <input type="text" class="form-control" name="username" [(ngModel)]="form.username" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" name="email" [(ngModel)]="form.email" />
+      </div>
+      <div class="field-group" *ngIf="formMode === 'create'">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" name="password" [(ngModel)]="form.password" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Role</label>
+        <select class="form-control" name="roleId" [(ngModel)]="form.roleId">
+          <option *ngFor="let r of roles" [ngValue]="r.id">{{ r.name }}</option>
+        </select>
+      </div>
+      <div class="field-group field-group-checkbox" *ngIf="formMode === 'edit'">
+        <label class="form-label">&nbsp;</label>
+        <label class="checkbox-label">
+          <input type="checkbox" name="isActive" [(ngModel)]="form.isActive" />
+          Active
+        </label>
+      </div>
+
+      <div class="alert-error" *ngIf="formError">{{ formError }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-action" [disabled]="saving">
+          <span class="spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : (formMode === 'create' ? 'Create user' : 'Save changes') }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelForm()" [disabled]="saving">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="data-card reset-card mb-3" *ngIf="resetPasswordUserId !== null">
+    <form (ngSubmit)="submitResetPassword()" class="create-form">
+      <div class="field-group">
+        <label class="form-label">New password</label>
+        <input type="password" class="form-control" name="newPassword" [(ngModel)]="resetPasswordValue" placeholder="At least 8 characters" />
+      </div>
+
+      <div class="alert-error" *ngIf="resetError">{{ resetError }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-action" [disabled]="resetting">
+          <span class="spinner" *ngIf="resetting"></span>
+          {{ resetting ? 'Resetting…' : 'Reset password' }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelResetPassword()" [disabled]="resetting">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading users…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <div class="state-icon state-icon-error">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+          <path d="M12 8v5M12 16h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+      </div>
+      <p class="state-title">Couldn't load users</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div class="table-scroll" *ngIf="users.length; else empty">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last login</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users">
+              <td class="cell-primary">{{ u.firstName }} {{ u.lastName }}</td>
+              <td class="cell-code">{{ u.username }}</td>
+              <td>{{ u.email }}</td>
+              <td><span class="chip chip-outline">{{ u.roleName }}</span></td>
+              <td>
+                <span class="status-pill" [ngClass]="u.isActive ? 'status-good' : 'status-neutral'">
+                  <span class="status-dot"></span>{{ u.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td class="cell-secondary">{{ u.lastLoginAt ? (u.lastLoginAt | date: 'medium') : 'Never' }}</td>
+              <td class="text-end">
+                <button type="button" class="row-action" (click)="openEditForm(u)">Edit</button>
+                <button type="button" class="row-action" (click)="openResetPassword(u)">Reset password</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #empty>
+        <div class="state-panel">
+          <p class="state-title">No users yet</p>
+          <p class="state-subtitle">Add one to get started.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>

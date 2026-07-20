@@ -25,12 +25,12 @@
   margin-left: 8px;
   padding: 2px 9px;
   border-radius: 999px;
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--status-critical-bg);
+  color: var(--status-critical-fg);
   font-size: 12px;
   font-weight: 650;
 }
 
 .row-overdue {
-  box-shadow: inset 3px 0 0 #dc2626;
+  box-shadow: inset 3px 0 0 var(--status-critical-fg);
 }

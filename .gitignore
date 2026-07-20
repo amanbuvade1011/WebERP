@@ -113,3 +113,9 @@ temp/
 *.bak
 *.swp
 *.orig
+
+#####################################################
+# Internal planning docs (roadmap, sprint files) - not for the repo
+#####################################################
+
+NicheWebERP/API/NicheWebErpAPI/docs/

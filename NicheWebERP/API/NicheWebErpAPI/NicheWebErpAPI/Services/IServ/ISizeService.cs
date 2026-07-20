@@ -1,0 +1,9 @@
+using NicheWebErpAPI.Dtos;
+
+namespace NicheWebErpAPI.Services.IServ
+{
+    public interface ISizeService
+    {
+        Task<List<SizeDto>> GetAllAsync();
+    }
+}

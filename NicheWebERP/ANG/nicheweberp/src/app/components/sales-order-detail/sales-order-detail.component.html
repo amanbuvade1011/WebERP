@@ -1,0 +1,295 @@
+<div class="page">
+  <div class="page-header d-flex align-items-center gap-3">
+    <button type="button" class="back-btn" (click)="goBack()" aria-label="Back to sales orders">
+      <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+        <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div>
+      <h1 class="page-title mb-1">{{ isNew ? 'New sales order' : ('SO-' + order?.documentNumber) }}</h1>
+      <p class="page-subtitle mb-0">{{ isNew ? 'Create a new wholesale order' : order?.firmName }}</p>
+    </div>
+    <span class="status-pill ms-auto" *ngIf="!isNew && order" [ngClass]="{
+      'status-warning': order.statusName === 'Draft',
+      'cat-sky': order.statusName === 'Confirmed',
+      'cat-violet': order.statusName === 'Shipped',
+      'status-good': order.statusName === 'Delivered',
+      'status-critical': order.statusName === 'Cancelled'
+    }">
+      <span class="status-dot"></span>{{ order.statusName }}
+    </span>
+  </div>
+
+  <div class="data-card" *ngIf="loading">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <p class="state-title">Couldn't load this order</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!loading && !error">
+    <!-- Header -->
+    <div class="data-card profile-card mb-3">
+      <h2 class="section-title mb-3">Order details</h2>
+
+      <ng-container *ngIf="isNew; else headerReadOnly">
+        <div class="profile-form-grid">
+          <div class="field-group">
+            <label class="form-label">Customer</label>
+            <app-entity-picker
+              placeholder="Search wholesale customers…"
+              [searchFn]="firmSearch"
+              (selected)="onFirmSelected($event)"
+            ></app-entity-picker>
+            <span class="field-hint" *ngIf="selectedFirm">{{ selectedFirm.tradingName }} selected</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Location</label>
+            <select class="form-control" name="location" [(ngModel)]="selectedLocationId" (ngModelChange)="resetPicker()">
+              <option value="">Select a location…</option>
+              <option *ngFor="let l of locations" [value]="l.id">{{ l.name }}</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Customer reference</label>
+            <input type="text" class="form-control" name="customerReferenceNo" [(ngModel)]="customerReferenceNo" />
+          </div>
+          <div class="field-group">
+            <label class="form-label">Narration</label>
+            <input type="text" class="form-control" name="narration" [(ngModel)]="narration" />
+          </div>
+        </div>
+
+        <div class="alert-warning mt-3" *ngIf="selectedFirm && !selectedFirm.allowOrder">
+          '{{ selectedFirm.tradingName }}' is not allowed to place orders (Allow orders is off for this customer).
+        </div>
+        <div class="field-hint mt-2" *ngIf="selectedFirm">
+          Price point: {{ selectedFirm.pricePointName || 'None assigned' }}
+          <ng-container *ngIf="selectedFirm.creditLimit">· Credit limit: {{ currency(selectedFirm.creditLimit) }}</ng-container>
+        </div>
+      </ng-container>
+
+      <ng-template #headerReadOnly>
+        <div class="profile-form-grid" *ngIf="order">
+          <div class="field-group">
+            <label class="form-label">Customer</label>
+            <span class="field-value">{{ order.firmName }}</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Location</label>
+            <span class="field-value">{{ order.locationName || '—' }}</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Price point</label>
+            <span class="field-value">{{ order.pricePointName || '—' }}</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Order date</label>
+            <span class="field-value">{{ formatDate(order.orderDate) }}</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Customer reference</label>
+            <span class="field-value">{{ order.customerReferenceNo || '—' }}</span>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Narration</label>
+            <span class="field-value">{{ order.narration || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="order && availableTransitions.length">
+          <button
+            type="button"
+            class="btn-secondary-action"
+            *ngFor="let t of availableTransitions"
+            (click)="changeStatus(t)"
+          >
+            Mark as {{ t }}
+          </button>
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="alert-error mb-3" *ngIf="saveError">{{ saveError }}</div>
+
+    <!-- Line picker (new order, or adding a line to an existing Draft order) -->
+    <div class="data-card profile-card mb-3" *ngIf="isNew || order?.statusName === 'Draft'">
+      <h2 class="section-title mb-3">Add line</h2>
+
+      <div class="profile-form-grid">
+        <div class="field-group">
+          <label class="form-label">Style</label>
+          <app-entity-picker
+            placeholder="Search styles by code…"
+            [searchFn]="styleSearch"
+            (selected)="onStyleSelected($event)"
+          ></app-entity-picker>
+        </div>
+        <div class="field-group" *ngIf="selectedStyle">
+          <label class="form-label">Color</label>
+          <select class="form-control" name="color" [(ngModel)]="selectedColorId" (ngModelChange)="onColorChange()">
+            <option value="">Select a color…</option>
+            <option *ngFor="let c of selectedStyle.colors" [value]="c.id">{{ c.color }}</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="field-hint mt-2" *ngIf="selectedStyle && !lineLocationId">
+        Choose a location above before selecting a color.
+      </p>
+
+      <div class="state-panel" *ngIf="pickerLoading">
+        <span class="spinner spinner-lg"></span>
+      </div>
+
+      <p class="field-hint mt-2" *ngIf="!pickerLoading && pickerError">{{ pickerError }}</p>
+
+      <div class="table-scroll mt-2" *ngIf="!pickerLoading && pickerRows.length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Size</th>
+              <th>Available</th>
+              <th>Est. unit price</th>
+              <th>Qty</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of pickerRows">
+              <td class="cell-primary">{{ row.sizeDescription }}</td>
+              <td class="cell-secondary">{{ row.available }}</td>
+              <td class="cell-secondary">
+                {{ row.estUnitPriceExTax !== null ? currency(row.estUnitPriceExTax) : 'No price set' }}
+              </td>
+              <td>
+                <input type="number" class="qty-input" min="1" [(ngModel)]="row.qty" [name]="'qty-' + row.productId" />
+              </td>
+              <td>
+                <button type="button" class="btn-secondary-action" [disabled]="row.qty <= 0" (click)="addPickerRow(row)">Add</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- New-order draft lines (not yet saved) -->
+    <div class="data-card mb-3" *ngIf="isNew">
+      <div class="table-scroll" *ngIf="draftLines.length; else noDraftLines">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Style</th>
+              <th>Color</th>
+              <th>Size</th>
+              <th>Qty</th>
+              <th>Est. unit price</th>
+              <th>Est. line total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of draftLines; let i = index">
+              <td class="cell-code">{{ l.styleCode }}</td>
+              <td class="cell-secondary">{{ l.color }}</td>
+              <td class="cell-secondary">{{ l.sizeDescription }}</td>
+              <td class="cell-secondary">{{ l.quantity }}</td>
+              <td class="cell-secondary">{{ l.estUnitPriceExTax !== null ? currency(l.estUnitPriceExTax) : 'No price set' }}</td>
+              <td class="cell-amount">{{ l.estUnitPriceExTax !== null ? currency((l.estUnitPriceExTax + (l.estUnitPriceTax || 0)) * l.quantity) : '—' }}</td>
+              <td>
+                <button type="button" class="chip-remove" (click)="removeDraftLine(i)" aria-label="Remove line">×</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noDraftLines>
+        <div class="state-panel">
+          <p class="state-title">No lines added yet</p>
+          <p class="state-subtitle">Use the picker above to add style/color/size lines.</p>
+        </div>
+      </ng-template>
+
+      <div class="pagination-bar" *ngIf="draftLines.length">
+        <span class="pagination-range" *ngIf="hasUnpricedDraftLine">
+          Some lines have no price set for this customer's price point — the order total shown is an estimate.
+        </span>
+        <span class="cell-amount">Est. total: {{ currency(draftTotal) }}</span>
+      </div>
+
+      <div class="profile-card">
+        <button type="button" class="btn-primary-action" [disabled]="saving" (click)="createOrder()">
+          <span class="spinner" *ngIf="saving"></span>
+          {{ saving ? 'Creating…' : 'Create order' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Existing order lines -->
+    <div class="data-card" *ngIf="!isNew && order">
+      <div class="table-scroll" *ngIf="order.lines.length; else noLines">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Style</th>
+              <th>Color</th>
+              <th>Size</th>
+              <th>Qty</th>
+              <th>Unit price</th>
+              <th>Line total</th>
+              <th *ngIf="order.statusName === 'Draft'"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of order.lines">
+              <td class="cell-code">{{ l.styleCode }}</td>
+              <td class="cell-secondary">{{ l.color }}</td>
+              <td class="cell-secondary">{{ l.sizeDescription }}</td>
+              <td>
+                <ng-container *ngIf="order.statusName === 'Draft'; else qtyReadOnly">
+                  <input
+                    type="number"
+                    class="qty-input"
+                    min="1"
+                    [ngModel]="lineEditValue(l.lineId, l.quantity)"
+                    (ngModelChange)="setLineEdit(l.lineId, $event)"
+                    [name]="'lineqty-' + l.lineId"
+                  />
+                </ng-container>
+                <ng-template #qtyReadOnly>{{ l.quantity }}</ng-template>
+              </td>
+              <td class="cell-secondary">{{ currency(l.unitPriceExTax) }}</td>
+              <td class="cell-amount">{{ currency(l.lineTotalExTax + l.lineTotalTax) }}</td>
+              <td *ngIf="order.statusName === 'Draft'">
+                <div class="d-flex gap-1">
+                  <button type="button" class="btn-secondary-action" (click)="saveLineEdit(l.lineId)">Save</button>
+                  <button type="button" class="chip-remove" (click)="removeLine(l.lineId)" aria-label="Remove line">×</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <ng-template #noLines>
+        <div class="state-panel">
+          <p class="state-title">No lines on this order</p>
+        </div>
+      </ng-template>
+
+      <div class="pagination-bar">
+        <span class="pagination-range">{{ order.totalQuantities }} units</span>
+        <span class="cell-amount">
+          Subtotal {{ currency(order.subTotalExTax) }} + Tax {{ currency(order.taxAmount) }} = Total {{ currency(order.totalAmount) }}
+        </span>
+      </div>
+    </div>
+  </ng-container>
+</div>

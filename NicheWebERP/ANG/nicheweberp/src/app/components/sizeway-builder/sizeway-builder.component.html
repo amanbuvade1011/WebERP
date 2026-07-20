@@ -1,0 +1,96 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Sizeway builder</h1>
+      <p class="page-subtitle mb-0">Build and reorder size-runs used across styles</p>
+    </div>
+    <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+      <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+        <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="data-card" *ngIf="loading">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading sizeways…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <p class="state-title">Couldn't load sizeways</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+  </div>
+
+  <div class="builder-grid" *ngIf="!loading && !error">
+    <div class="data-card sizeway-list-card">
+      <div class="card-heading-row">
+        <h2 class="section-title">Sizeways</h2>
+        <button type="button" class="btn-secondary-action btn-sm" (click)="startCreate()">+ New</button>
+      </div>
+      <ul class="sizeway-list">
+        <li
+          *ngFor="let sw of sizeways"
+          class="sizeway-list-item"
+          [class.active]="sw.id === selectedSizewayId"
+          (click)="selectSizeway(sw)"
+        >
+          <span class="sizeway-name">{{ sw.description }}</span>
+          <span class="sizeway-count">{{ sw.sizes.length }} sizes</span>
+        </li>
+        <li *ngIf="!sizeways.length" class="state-subtitle p-3">No sizeways yet.</li>
+      </ul>
+    </div>
+
+    <div class="data-card builder-card" *ngIf="isCreating || selectedSizewayId">
+      <h2 class="section-title mb-3">{{ isCreating ? 'New sizeway' : 'Edit size sequence' }}</h2>
+
+      <div class="field-group mb-3" *ngIf="isCreating">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" name="builderName" [(ngModel)]="builderName" placeholder="e.g. S-M-L-XL" />
+      </div>
+
+      <div class="size-sequence-list mb-3">
+        <div class="size-sequence-row" *ngFor="let s of builderSizes; let i = index">
+          <span class="size-order">{{ i + 1 }}</span>
+          <span class="size-label">{{ s.sizeDescription }}</span>
+          <div class="size-actions">
+            <button type="button" class="icon-btn" (click)="moveUp(i)" [disabled]="i === 0" aria-label="Move up">↑</button>
+            <button type="button" class="icon-btn" (click)="moveDown(i)" [disabled]="i === builderSizes.length - 1" aria-label="Move down">↓</button>
+            <button type="button" class="icon-btn icon-btn-remove" (click)="removeSize(s.sizeId)" aria-label="Remove">✕</button>
+          </div>
+        </div>
+        <p class="state-subtitle" *ngIf="!builderSizes.length">No sizes added yet.</p>
+      </div>
+
+      <div class="add-size-row">
+        <select class="form-control" [(ngModel)]="sizeToAdd" name="sizeToAdd">
+          <option value="" disabled>Add a size…</option>
+          <option *ngFor="let s of availableSizes" [value]="s.id">{{ s.description }}</option>
+        </select>
+        <button type="button" class="btn-secondary-action" (click)="addSize()" [disabled]="!sizeToAdd">Add</button>
+      </div>
+
+      <div class="alert-error mt-3" *ngIf="saveError">{{ saveError }}</div>
+
+      <div class="d-flex gap-2 mt-3">
+        <button type="button" class="btn-primary-action" (click)="save()" [disabled]="saving">
+          <span class="spinner" *ngIf="saving"></span>
+          {{ saving ? 'Saving…' : (isCreating ? 'Create sizeway' : 'Save sequence') }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelBuilder()" [disabled]="saving">Cancel</button>
+      </div>
+    </div>
+
+    <div class="data-card builder-card empty-hint" *ngIf="!isCreating && !selectedSizewayId">
+      <div class="state-panel">
+        <p class="state-title">Select a sizeway to edit</p>
+        <p class="state-subtitle">Or create a new one to get started.</p>
+      </div>
+    </div>
+  </div>
+</div>

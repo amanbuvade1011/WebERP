@@ -65,11 +65,11 @@
 }
 
 .kpi-delta.delta-up {
-  color: #065f46;
+  color: var(--status-good-fg);
 }
 
 .kpi-delta.delta-down {
-  color: #dc2626;
+  color: var(--status-critical-fg);
 }
 
 .kpi-delta-label {
@@ -323,9 +323,9 @@
   flex-shrink: 0;
 }
 
-.activity-icon-order { background: #eef2ff; color: #3730a3; }
-.activity-icon-invoice { background: #ecfdf5; color: #065f46; }
-.activity-icon-product { background: #fffbeb; color: #92400e; }
+.activity-icon-order { background: var(--chip-indigo-bg); color: var(--chip-indigo-fg); }
+.activity-icon-invoice { background: var(--chip-emerald-bg); color: var(--chip-emerald-fg); }
+.activity-icon-product { background: var(--chip-amber-bg); color: var(--chip-amber-fg); }
 
 .activity-body {
   display: flex;

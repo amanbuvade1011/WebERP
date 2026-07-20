@@ -1,0 +1,25 @@
+<div class="entity-picker">
+  <input
+    type="text"
+    class="picker-input"
+    [placeholder]="placeholder"
+    [(ngModel)]="term"
+    (input)="onInput()"
+    (focus)="open = true"
+    (blur)="onBlur()"
+  />
+  <span class="picker-spinner" *ngIf="loading"></span>
+
+  <div class="picker-dropdown" *ngIf="open && (results.length || loading)">
+    <div class="picker-loading" *ngIf="loading && !results.length">Searching…</div>
+    <button
+      type="button"
+      class="picker-option"
+      *ngFor="let r of results"
+      (mousedown)="choose(r)"
+    >
+      <span class="picker-option-label">{{ r.label }}</span>
+      <span class="picker-option-sublabel" *ngIf="r.sublabel">{{ r.sublabel }}</span>
+    </button>
+  </div>
+</div>

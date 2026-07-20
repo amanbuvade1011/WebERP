@@ -1,0 +1,153 @@
+<div class="login-shell d-flex">
+  <app-theme-toggle class="login-theme-toggle"></app-theme-toggle>
+
+  <!-- Branded panel — hidden on narrow viewports (see login.component.css) -->
+  <div class="brand-panel d-flex flex-column">
+    <div class="brand-blob brand-blob-1"></div>
+    <div class="brand-blob brand-blob-2"></div>
+    <div class="brand-grid"></div>
+
+    <div class="brand-content">
+      <div class="d-flex align-items-center gap-2 mb-5">
+        <span class="brand-mark d-flex align-items-center justify-content-center rounded-3 fw-semibold">N</span>
+        <span class="brand-name fw-semibold">NicheERP</span>
+      </div>
+
+      <h1 class="brand-headline mb-3">Run your garment business<br />from cut to cash.</h1>
+      <p class="brand-subline mb-5">
+        One system for style, color, and size — from cutting sheets on the floor to invoices in
+        the ledger.
+      </p>
+
+      <ul class="brand-features list-unstyled d-flex flex-column gap-4">
+        <li class="d-flex align-items-start gap-3">
+          <span class="feature-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="17" height="17">
+              <path d="M10 2.5l6.5 3.75v7.5L10 17.5l-6.5-3.75v-7.5L10 2.5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M10 10v7.5M10 10L3.5 6.25M10 10l6.5-3.75" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <div>
+            <div class="feature-title">Style → color → size, tracked properly</div>
+            <div class="feature-subtitle">Real inventory, not flat SKUs guessing at a size run.</div>
+          </div>
+        </li>
+        <li class="d-flex align-items-start gap-3">
+          <span class="feature-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="17" height="17">
+              <path d="M5 3h7l4 4v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+              <path d="M7.5 10.5h5M7.5 13.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+            </svg>
+          </span>
+          <div>
+            <div class="feature-title">Cutting &amp; making sheets built in</div>
+            <div class="feature-subtitle">Generate production paperwork straight from a sales order.</div>
+          </div>
+        </li>
+        <li class="d-flex align-items-start gap-3">
+          <span class="feature-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="17" height="17">
+              <circle cx="7" cy="6" r="2.5" stroke="currentColor" stroke-width="1.5" />
+              <path d="M2.5 16.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              <circle cx="14.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.5" />
+              <path d="M12.5 12.3c1.9.2 3.5 1.5 3.5 4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </span>
+          <div>
+            <div class="feature-title">Wholesale and retail, one source of truth</div>
+            <div class="feature-subtitle">Different pricing and terms, same system underneath.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="brand-footer">© 2026 NicheERP</div>
+  </div>
+
+  <!-- Form panel -->
+  <div class="form-panel d-flex align-items-center justify-content-center">
+    <div class="login-card">
+      <div class="brand-mark-mobile d-flex align-items-center gap-2 mb-4">
+        <span class="brand-mark d-flex align-items-center justify-content-center rounded-3 fw-semibold">N</span>
+        <span class="brand-name fw-semibold">NicheERP</span>
+      </div>
+
+      <h2 class="login-title mb-1">Welcome back</h2>
+      <p class="login-subtitle mb-4">Sign in with your ERP staff account to continue.</p>
+
+      <form (ngSubmit)="submit()" novalidate>
+        <div class="field-group mb-3">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-with-icon">
+            <svg class="field-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <circle cx="10" cy="6.5" r="3" stroke="currentColor" stroke-width="1.5" />
+              <path d="M3.5 17c0-3.3 2.9-6 6.5-6s6.5 2.7 6.5 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <input
+              id="username"
+              type="text"
+              class="form-control"
+              name="username"
+              placeholder="e.g. jdoe"
+              [(ngModel)]="username"
+              autocomplete="username"
+              [disabled]="loading"
+            />
+          </div>
+        </div>
+
+        <div class="field-group mb-3">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-with-icon">
+            <svg class="field-icon" viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <rect x="4.5" y="8.5" width="11" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+              <path d="M6.5 8.5V6a3.5 3.5 0 0 1 7 0v2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              class="form-control"
+              name="password"
+              placeholder="••••••••"
+              [(ngModel)]="password"
+              autocomplete="current-password"
+              [disabled]="loading"
+            />
+            <button
+              type="button"
+              class="visibility-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+              tabindex="-1"
+            >
+              <svg *ngIf="!showPassword" viewBox="0 0 20 20" fill="none" width="16" height="16">
+                <path d="M1.5 10S4.5 4.5 10 4.5 18.5 10 18.5 10 15.5 15.5 10 15.5 1.5 10 1.5 10z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                <circle cx="10" cy="10" r="2.25" stroke="currentColor" stroke-width="1.5" />
+              </svg>
+              <svg *ngIf="showPassword" viewBox="0 0 20 20" fill="none" width="16" height="16">
+                <path d="M2.5 2.5l15 15M8.3 8.4a2.25 2.25 0 0 0 3.2 3.2M6.2 6.3C3.9 7.6 2 10 2 10s3 5.5 8 5.5c1.4 0 2.6-.4 3.7-1M12 5.2c1.9.6 3.5 2 4.5 3.3.6.8 1 1.5 1 1.5s-.5.9-1.4 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="alert-error d-flex align-items-center gap-2 mb-3" *ngIf="error">
+          <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5" />
+            <path d="M10 6.5v4M10 13.2h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+          </svg>
+          {{ error }}
+        </div>
+
+        <button type="submit" class="submit-btn w-100 justify-content-center" [disabled]="loading">
+          <span class="spinner" *ngIf="loading"></span>
+          {{ loading ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+
+      <p class="login-footnote mt-4">
+        Trouble signing in? Contact your system administrator.
+      </p>
+    </div>
+  </div>
+</div>

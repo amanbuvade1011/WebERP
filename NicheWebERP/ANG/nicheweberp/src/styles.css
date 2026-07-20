@@ -1,16 +1,44 @@
+/* ==========================================================================
+   Theme tokens — light is the default; dark applies automatically from OS
+   preference (prefers-color-scheme) unless the user has made an explicit
+   choice, in which case [data-theme] on <html> always wins. See
+   src/app/services/theme.service.ts for the toggle logic and
+   index.html for the pre-bootstrap flash-of-wrong-theme guard.
+   ========================================================================== */
+
 :root {
+  color-scheme: light;
+
   --color-bg: #f5f5f7;
   --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
   --color-border: #e5e5e7;
   --color-text: #1d1d1f;
   --color-text-secondary: #6e6e73;
   --color-accent: #0071e3;
+  --color-accent-contrast: #ffffff;
 
   --radius-sm: 8px;
   --radius-md: 12px;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  /* Semantic chip palette (identity — category, label, etc.) */
+  --chip-indigo-bg: #eef2ff; --chip-indigo-fg: #3730a3;
+  --chip-emerald-bg: #ecfdf5; --chip-emerald-fg: #065f46;
+  --chip-amber-bg: #fffbeb; --chip-amber-fg: #92400e;
+  --chip-pink-bg: #fdf2f8; --chip-pink-fg: #9d174d;
+  --chip-sky-bg: #f0f9ff; --chip-sky-fg: #075985;
+  --chip-violet-bg: #f5f3ff; --chip-violet-fg: #5b21b6;
+  --chip-teal-bg: #f0fdfa; --chip-teal-fg: #115e59;
+  --chip-orange-bg: #fff7ed; --chip-orange-fg: #9a3412;
+
+  /* Semantic status palette (state — reserved meaning) */
+  --status-good-bg: #ecfdf5; --status-good-fg: #065f46;
+  --status-warning-bg: #fffbeb; --status-warning-fg: #92400e;
+  --status-critical-bg: #fef2f2; --status-critical-fg: #dc2626;
+  --status-info-bg: #eff6ff; --status-info-fg: #1d4ed8;
 
   /* Align Bootstrap's theme color with the site accent */
   --bs-primary: var(--color-accent);
@@ -21,19 +49,77 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #000000;
-    --color-surface: #1c1c1e;
-    --color-border: #2c2c2e;
-    --color-text: #f5f5f7;
-    --color-text-secondary: #98989d;
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    /* Elevated dark grays, not pure black — easier on the eyes, standard
+       "industry" dark-UI pattern (GitHub/Linear/Vercel-style), and it lets
+       shadows still read as shadows instead of disappearing. */
+    --color-bg: #121214;
+    --color-surface: #1c1c1f;
+    --color-surface-raised: #232326;
+    --color-border: #303033;
+    --color-text: #f2f2f3;
+    --color-text-secondary: #9a9aa1;
     --color-accent: #0a84ff;
+    --color-accent-contrast: #ffffff;
 
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+    --chip-indigo-bg: #23234a; --chip-indigo-fg: #a5b4fc;
+    --chip-emerald-bg: #0f2e22; --chip-emerald-fg: #6ee7b7;
+    --chip-amber-bg: #3a2a0a; --chip-amber-fg: #fcd34d;
+    --chip-pink-bg: #3a1530; --chip-pink-fg: #f9a8d4;
+    --chip-sky-bg: #0c2a3d; --chip-sky-fg: #7dd3fc;
+    --chip-violet-bg: #2a1f4d; --chip-violet-fg: #c4b5fd;
+    --chip-teal-bg: #0d2e2b; --chip-teal-fg: #5eead4;
+    --chip-orange-bg: #3a220a; --chip-orange-fg: #fdba74;
+
+    --status-good-bg: #0f2e22; --status-good-fg: #6ee7b7;
+    --status-warning-bg: #3a2a0a; --status-warning-fg: #fcd34d;
+    --status-critical-bg: #3a1212; --status-critical-fg: #fca5a5;
+    --status-info-bg: #122a4d; --status-info-fg: #93c5fd;
 
     --bs-primary-rgb: 10, 132, 255;
   }
+}
+
+/* Explicit user choice always wins over OS preference. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #121214;
+  --color-surface: #1c1c1f;
+  --color-surface-raised: #232326;
+  --color-border: #303033;
+  --color-text: #f2f2f3;
+  --color-text-secondary: #9a9aa1;
+  --color-accent: #0a84ff;
+  --color-accent-contrast: #ffffff;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+  --chip-indigo-bg: #23234a; --chip-indigo-fg: #a5b4fc;
+  --chip-emerald-bg: #0f2e22; --chip-emerald-fg: #6ee7b7;
+  --chip-amber-bg: #3a2a0a; --chip-amber-fg: #fcd34d;
+  --chip-pink-bg: #3a1530; --chip-pink-fg: #f9a8d4;
+  --chip-sky-bg: #0c2a3d; --chip-sky-fg: #7dd3fc;
+  --chip-violet-bg: #2a1f4d; --chip-violet-fg: #c4b5fd;
+  --chip-teal-bg: #0d2e2b; --chip-teal-fg: #5eead4;
+  --chip-orange-bg: #3a220a; --chip-orange-fg: #fdba74;
+
+  --status-good-bg: #0f2e22; --status-good-fg: #6ee7b7;
+  --status-warning-bg: #3a2a0a; --status-warning-fg: #fcd34d;
+  --status-critical-bg: #3a1212; --status-critical-fg: #fca5a5;
+  --status-info-bg: #122a4d; --status-info-fg: #93c5fd;
+
+  --bs-primary-rgb: 10, 132, 255;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 }
 
 * {
@@ -52,6 +138,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 h1,
