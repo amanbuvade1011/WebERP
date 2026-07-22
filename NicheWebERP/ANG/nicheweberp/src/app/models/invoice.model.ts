@@ -77,4 +77,8 @@ export interface RecordPaymentRequest {
   amount: number;
   paymentMethodId: string;
   narration: string | null;
+  // Added Sprint 10 (Finance: Cash Management) - optional so this doesn't become a required
+  // field on a Sprint 06 form; a payment recorded without one just doesn't count toward any
+  // cashbook's balance.
+  cashbookId: string | null;
 }

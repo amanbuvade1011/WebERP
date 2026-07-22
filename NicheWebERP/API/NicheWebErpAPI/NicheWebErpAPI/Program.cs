@@ -88,6 +88,24 @@ builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<IFreightRepository, FreightRepository>();
 builder.Services.AddScoped<IFreightService, FreightService>();
 
+// Sprint 08 - Manufacturing (Cutting Sheet)
+builder.Services.AddScoped<ICuttingSheetRepository, CuttingSheetRepository>();
+builder.Services.AddScoped<ICuttingSheetService, CuttingSheetService>();
+builder.Services.AddScoped<IMakingSheetRepository, MakingSheetRepository>();
+builder.Services.AddScoped<IMakingSheetService, MakingSheetService>();
+
+// Sprint 10 - Finance: Cash Management
+builder.Services.AddScoped<IFinanceRepository, FinanceRepository>();
+builder.Services.AddScoped<ILaneService, LaneService>();
+builder.Services.AddScoped<ICashbookService, CashbookService>();
+builder.Services.AddScoped<ICashInOutService, CashInOutService>();
+builder.Services.AddScoped<IBankDepositService, BankDepositService>();
+builder.Services.AddScoped<IReconciliationService, ReconciliationService>();
+
+// Sprint 12 - Dashboard
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services
     .AddAuthentication(options =>

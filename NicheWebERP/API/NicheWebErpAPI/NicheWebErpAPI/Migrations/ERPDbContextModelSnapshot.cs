@@ -22,6 +22,177 @@ namespace NicheWebErpAPI.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("NicheWebErpAPI.Models.BankDeposit", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount1")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("BankStatementDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CashbookID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("LocalExchangeRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PresentedToBank")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("BankDeposit", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.BankDepositLine", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("BankDepositID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CurrencyReceivedID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PaymentMethodID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("RealizedExchangeRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("BankDepositLine", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.CashInOut", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AmountIn")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CurrencyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LaneID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PaymentMethodID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("TransactionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("CashInOut", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.Cashbook", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BSB")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CurrencyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("GeneralLedgerID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Limit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("OpeningBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("OpeningBalanceAsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("Cashbook", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("NicheWebErpAPI.Models.Category", b =>
                 {
                     b.Property<Guid>("CompanyID")
@@ -211,6 +382,86 @@ namespace NicheWebErpAPI.Migrations
                     b.ToTable("CouponPerson", (string)null);
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.CuttingSheet", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CutDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CutterID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("DocumentNumber")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FabricDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("SalesOrderID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SeasonID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("StyleColorID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StyleID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("TotalQuantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("CuttingSheet", (string)null);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.CuttingSheetSize", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CuttingSheetID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("SizewayItemID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("CuttingSheetSize", (string)null);
                 });
 
             modelBuilder.Entity("NicheWebErpAPI.Models.ErpRole", b =>
@@ -557,6 +808,112 @@ namespace NicheWebErpAPI.Migrations
                     b.ToTable("Label", (string)null);
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.Lane", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DefaultGLCreditID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DefaultGLDebitID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("Inactive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("Lane", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.MakingSheet", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CuttingSheetID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DocumentNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("StyleColorID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StyleID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("MakingSheet", (string)null);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.MakingSheetOperation", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MakingSheetID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("StandardMinutes")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("MakingSheetOperation", (string)null);
                 });
 
             modelBuilder.Entity("NicheWebErpAPI.Models.PaymentMethod", b =>
@@ -998,6 +1355,84 @@ namespace NicheWebErpAPI.Migrations
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
+            modelBuilder.Entity("NicheWebErpAPI.Models.Reconciliation", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("ClosingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EmployeeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LaneID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("Reconciliation", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.ReconciliationCurrencyPaymentMethod", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CountedAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CurrencyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("ExpectedAmount1")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Explanation")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("OpeningAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("PaymentMethodID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ReconciliationID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("ReconciliationCurrencyPaymentMethod", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("NicheWebErpAPI.Models.Season", b =>
                 {
                     b.Property<Guid>("CompanyID")
@@ -1429,6 +1864,9 @@ namespace NicheWebErpAPI.Migrations
 
                     b.Property<decimal>("Amount1")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("CashbookID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("CurrencyID")
                         .HasColumnType("uniqueidentifier");

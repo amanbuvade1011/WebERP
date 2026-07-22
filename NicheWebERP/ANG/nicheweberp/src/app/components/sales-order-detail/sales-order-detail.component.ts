@@ -11,6 +11,7 @@ import { StyleService } from '../../services/style.service';
 import { ProductService } from '../../services/product.service';
 import { PromotionService } from '../../services/promotion.service';
 import { FreightService } from '../../services/freight.service';
+import { CuttingSheetService } from '../../services/cutting-sheet.service';
 import {
   SALES_ORDER_STATUS_VALUES,
   SalesOrderDetail,
@@ -21,6 +22,7 @@ import { Location } from '../../models/location.model';
 import { StyleDetail } from '../../models/style.model';
 import { StockGridRow, StylePrice } from '../../models/product.model';
 import { ValidateCouponResult } from '../../models/promotion.model';
+import { CuttingSheetPreviewGroup } from '../../models/cutting-sheet.model';
 import { EntityOption, EntityPickerComponent } from '../entity-picker/entity-picker.component';
 
 // Mirrors SalesOrderService.AllowedTransitions on the backend - kept in sync manually since it's
@@ -68,6 +70,14 @@ export class SalesOrderDetailComponent implements OnInit {
   saveError = '';
   generatingInvoice = false;
 
+  // Generate Cutting Sheet (Sprint 08) - review/confirm step before anything is persisted:
+  // previewCuttingSheet() only reads the grouped style/color/size breakdown, generateCuttingSheet()
+  // (below) only fires once the user has seen and confirmed it.
+  cuttingSheetPreview: CuttingSheetPreviewGroup[] | null = null;
+  previewingCuttingSheet = false;
+  generatingCuttingSheet = false;
+  cuttingSheetError = '';
+
   // New-order header state.
   locations: Location[] = [];
   selectedFirm: FirmDetail | null = null;
@@ -104,7 +114,8 @@ export class SalesOrderDetailComponent implements OnInit {
     private styleService: StyleService,
     private productService: ProductService,
     private promotionService: PromotionService,
-    private freightService: FreightService
+    private freightService: FreightService,
+    private cuttingSheetService: CuttingSheetService
   ) {}
 
   ngOnInit(): void {
@@ -450,6 +461,50 @@ export class SalesOrderDetailComponent implements OnInit {
       error: (err) => {
         this.generatingInvoice = false;
         this.handleSaveError(err);
+      }
+    });
+  }
+
+  // Generate Cutting Sheet - same fulfillment-status gate as Generate Invoice (see
+  // CuttingSheetService.CuttableOrderStatuses on the backend, which re-validates regardless).
+  get canGenerateCuttingSheet(): boolean {
+    if (!this.order) return false;
+    return ['Confirmed', 'Shipped', 'Delivered'].includes(this.order.statusName);
+  }
+
+  previewCuttingSheet(): void {
+    if (!this.orderId) return;
+    this.previewingCuttingSheet = true;
+    this.cuttingSheetError = '';
+    this.cuttingSheetService.previewFromOrder(this.orderId).subscribe({
+      next: (groups) => {
+        this.previewingCuttingSheet = false;
+        this.cuttingSheetPreview = groups;
+      },
+      error: (err) => {
+        this.previewingCuttingSheet = false;
+        this.cuttingSheetError = err?.error?.message || 'Could not preview the cutting sheet.';
+      }
+    });
+  }
+
+  cancelCuttingSheetPreview(): void {
+    this.cuttingSheetPreview = null;
+    this.cuttingSheetError = '';
+  }
+
+  confirmGenerateCuttingSheet(): void {
+    if (!this.orderId) return;
+    this.generatingCuttingSheet = true;
+    this.cuttingSheetError = '';
+    this.cuttingSheetService.generateFromOrder(this.orderId).subscribe({
+      next: () => {
+        this.generatingCuttingSheet = false;
+        this.router.navigate(['/cutting-sheets']);
+      },
+      error: (err) => {
+        this.generatingCuttingSheet = false;
+        this.cuttingSheetError = err?.error?.message || 'Could not generate the cutting sheet.';
       }
     });
   }

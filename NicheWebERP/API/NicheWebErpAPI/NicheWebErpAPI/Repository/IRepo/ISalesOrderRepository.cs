@@ -14,6 +14,7 @@ namespace NicheWebErpAPI.Repository.IRepo
         public string StyleCode { get; set; } = null!;
         public Guid StyleColorId { get; set; }
         public string Color { get; set; } = null!;
+        public Guid SizewayItemId { get; set; }
         public string SizeDescription { get; set; } = null!;
         public bool? Inactive { get; set; }
     }
@@ -23,6 +24,10 @@ namespace NicheWebErpAPI.Repository.IRepo
         Task<Firm?> GetFirmAsync(Guid companyId, Guid firmId);
         Task<CompanyLocation?> GetLocationAsync(Guid companyId, Guid locationId);
         Task<ProductDescriptor?> GetProductDescriptorAsync(Guid companyId, Guid productId);
+        // Resolves the ProductLocation a TransactionQuantity row points at, back to its full
+        // style/color/size descriptor - used by CuttingSheetService to build a breakdown from an
+        // order's existing TransactionQuantity rows. See docs/ai-plan/sprints/sprint-08-manufacturing-cutting-sheet.md.
+        Task<ProductDescriptor?> GetProductDescriptorByProductLocationAsync(Guid companyId, Guid productLocationId);
         Task<StylePrice?> GetStylePriceAsync(Guid companyId, Guid styleId, Guid pricePointId);
         Task<StyleSellLocation?> GetStyleSellLocationAsync(Guid companyId, Guid styleId, Guid locationId);
         Task<ProductLocation?> GetProductLocationAsync(Guid companyId, Guid productId, Guid styleSellLocationId);

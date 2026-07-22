@@ -55,6 +55,30 @@ namespace NicheWebErpAPI
         public DbSet<FreightItem> FreightItems => Set<FreightItem>();
         public DbSet<TransactionDiscount> TransactionDiscounts => Set<TransactionDiscount>();
 
+        // New (Sprint 08) - Manufacturing. 100% greenfield tables, no legacy precedent - unlike
+        // every entity above, these have no triggers, so they don't need UseSqlOutputClause(false)
+        // (see the note on that below). See docs/ai-plan/01-database-map.md.
+        public DbSet<CuttingSheet> CuttingSheets => Set<CuttingSheet>();
+        public DbSet<CuttingSheetSize> CuttingSheetSizes => Set<CuttingSheetSize>();
+
+        // New (Sprint 09) - Manufacturing continues to be greenfield. See
+        // docs/ai-plan/01-database-map.md.
+        public DbSet<MakingSheet> MakingSheets => Set<MakingSheet>();
+        public DbSet<MakingSheetOperation> MakingSheetOperations => Set<MakingSheetOperation>();
+
+        // New (Sprint 10) - Finance: Cash Management. All of these are pre-existing legacy
+        // tables (Cashbook has 3 real rows; Lane/CashInOut/BankDeposit/BankDepositLine/
+        // Reconciliation/ReconciliationCurrencyPaymentMethod have 0), first mapped into EF here -
+        // same "empty migration" situation as Sprints 06/07. See
+        // docs/ai-plan/sprints/sprint-10-finance-cash-management.md.
+        public DbSet<Lane> Lanes => Set<Lane>();
+        public DbSet<Cashbook> Cashbooks => Set<Cashbook>();
+        public DbSet<CashInOut> CashInOuts => Set<CashInOut>();
+        public DbSet<BankDeposit> BankDeposits => Set<BankDeposit>();
+        public DbSet<BankDepositLine> BankDepositLines => Set<BankDepositLine>();
+        public DbSet<Reconciliation> Reconciliations => Set<Reconciliation>();
+        public DbSet<ReconciliationCurrencyPaymentMethod> ReconciliationCurrencyPaymentMethods => Set<ReconciliationCurrencyPaymentMethod>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Every table in this DB uses a composite key: (CompanyID, EntityID).
@@ -276,6 +300,76 @@ namespace NicheWebErpAPI
             modelBuilder.Entity<TransactionDiscount>(e =>
             {
                 e.ToTable("TransactionDiscount", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            // New tables we create ourselves - no triggers, so no UseSqlOutputClause(false) needed
+            // (see the big comment at the top of this method).
+            modelBuilder.Entity<CuttingSheet>(e =>
+            {
+                e.ToTable("CuttingSheet");
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<CuttingSheetSize>(e =>
+            {
+                e.ToTable("CuttingSheetSize");
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<MakingSheet>(e =>
+            {
+                e.ToTable("MakingSheet");
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<MakingSheetOperation>(e =>
+            {
+                e.ToTable("MakingSheetOperation");
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            // Pre-existing legacy tables (like every entity at the top of this method) - need
+            // UseSqlOutputClause(false), unlike the genuinely new Manufacturing tables above.
+            modelBuilder.Entity<Lane>(e =>
+            {
+                e.ToTable("Lane", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<Cashbook>(e =>
+            {
+                e.ToTable("Cashbook", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<CashInOut>(e =>
+            {
+                e.ToTable("CashInOut", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<BankDeposit>(e =>
+            {
+                e.ToTable("BankDeposit", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<BankDepositLine>(e =>
+            {
+                e.ToTable("BankDepositLine", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<Reconciliation>(e =>
+            {
+                e.ToTable("Reconciliation", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<ReconciliationCurrencyPaymentMethod>(e =>
+            {
+                e.ToTable("ReconciliationCurrencyPaymentMethod", tb => tb.UseSqlOutputClause(false));
                 e.HasKey(x => new { x.CompanyID, x.EntityID });
             });
         }

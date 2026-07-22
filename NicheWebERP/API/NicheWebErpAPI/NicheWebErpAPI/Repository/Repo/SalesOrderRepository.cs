@@ -86,10 +86,23 @@ namespace NicheWebErpAPI.Repository.Repo
                     StyleCode = st.Code,
                     StyleColorId = sc.EntityID,
                     Color = sc.Color,
+                    SizewayItemId = si.EntityID,
                     SizeDescription = sz.Description,
                     Inactive = p.Inactive
                 }
             ).FirstOrDefaultAsync();
+
+        public async Task<ProductDescriptor?> GetProductDescriptorByProductLocationAsync(Guid companyId, Guid productLocationId)
+        {
+            var productLocation = await _productLocationService.Query()
+                .FirstOrDefaultAsync(pl => pl.CompanyID == companyId && pl.EntityID == productLocationId);
+            if (productLocation?.ProductID is null)
+            {
+                return null;
+            }
+
+            return await GetProductDescriptorAsync(companyId, productLocation.ProductID.Value);
+        }
 
         public Task<StylePrice?> GetStylePriceAsync(Guid companyId, Guid styleId, Guid pricePointId) =>
             _stylePriceService.Query().FirstOrDefaultAsync(

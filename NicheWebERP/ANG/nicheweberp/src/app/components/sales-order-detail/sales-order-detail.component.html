@@ -138,7 +138,7 @@
           </div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="order && (availableTransitions.length || canGenerateInvoice || order.isInvoiced)">
+        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="order && (availableTransitions.length || canGenerateInvoice || order.isInvoiced || canGenerateCuttingSheet)">
           <button
             type="button"
             class="btn-secondary-action"
@@ -158,6 +158,52 @@
             {{ generatingInvoice ? 'Generating…' : 'Generate Invoice' }}
           </button>
           <span class="field-hint" *ngIf="order.isInvoiced">Already invoiced.</span>
+          <button
+            type="button"
+            class="btn-secondary-action"
+            *ngIf="canGenerateCuttingSheet"
+            [disabled]="previewingCuttingSheet"
+            (click)="previewCuttingSheet()"
+          >
+            <span class="spinner" *ngIf="previewingCuttingSheet"></span>
+            {{ previewingCuttingSheet ? 'Loading…' : 'Generate Cutting Sheet' }}
+          </button>
+        </div>
+
+        <div class="alert-error mt-3" *ngIf="cuttingSheetError">{{ cuttingSheetError }}</div>
+
+        <div class="data-card cutting-sheet-preview mt-3" *ngIf="cuttingSheetPreview">
+          <h2 class="section-title mb-2">Review cutting sheet</h2>
+          <p class="field-hint mb-3">
+            This will create {{ cuttingSheetPreview.length }}
+            {{ cuttingSheetPreview.length === 1 ? 'cutting sheet' : 'cutting sheets' }} (one per style/color) from this order.
+          </p>
+
+          <div class="table-scroll mb-3" *ngFor="let group of cuttingSheetPreview">
+            <p class="cell-primary mb-1">{{ group.styleCode }} · {{ group.color }} — {{ group.totalQuantity }} total</p>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let s of group.sizes">
+                  <td class="cell-secondary">{{ s.sizeDescription }}</td>
+                  <td class="cell-secondary">{{ s.quantity }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="button" class="btn-primary-action" [disabled]="generatingCuttingSheet" (click)="confirmGenerateCuttingSheet()">
+              <span class="spinner" *ngIf="generatingCuttingSheet"></span>
+              {{ generatingCuttingSheet ? 'Generating…' : 'Confirm & Generate' }}
+            </button>
+            <button type="button" class="btn-secondary-action" [disabled]="generatingCuttingSheet" (click)="cancelCuttingSheetPreview()">Cancel</button>
+          </div>
         </div>
       </ng-template>
     </div>

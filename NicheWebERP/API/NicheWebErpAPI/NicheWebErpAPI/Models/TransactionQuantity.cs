@@ -21,6 +21,18 @@ namespace NicheWebErpAPI.Models
         public int SalesOrderFirm { get; set; }
         public int SalesOrderPerson { get; set; }
 
+        // NOT NULL, no default - discovered live 2026-07-22 (same investigation as
+        // TransactionBase/TransactionLine's gaps). Stock-movement/rental tracking with no
+        // equivalent concept in this app yet - zeroed by every writer.
+        public int Variance { get; set; }
+        public int Processed { get; set; }
+        public int TransitIn { get; set; }
+        public int TransitOut { get; set; }
+        public int PurchaseOrder { get; set; }
+        public int RentalHeld { get; set; }
+        public int RentalOrder { get; set; }
+        public int RentalOut { get; set; }
+
         public DateTime? LastUpdated { get; set; }
         public Guid? UpdatedByID { get; set; }
     }

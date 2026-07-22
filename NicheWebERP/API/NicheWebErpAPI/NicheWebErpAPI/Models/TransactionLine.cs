@@ -15,6 +15,18 @@ namespace NicheWebErpAPI.Models
         public string EntityClassName { get; set; } = null!;
         public decimal LineTaxAmount1 { get; set; }
 
+        // NOT NULL in the DB with no default - discovered live 2026-07-22 (same INSERT-failure
+        // investigation as TransactionBase's gaps). No tax-jurisdiction or fault-type concept
+        // exists in this app yet, and no line here is ever manually price-overridden - all
+        // zeroed/Guid.Empty by every writer.
+        public Guid TaxJurisdictionCategoryID { get; set; }
+        public bool IsManualLine1 { get; set; }
+        public decimal ManualLineAmountExTax { get; set; }
+        public decimal ManualLineTax { get; set; }
+        public Guid FaultTypeID { get; set; }
+        public decimal DiscountExTax1 { get; set; }
+        public decimal DiscountTax1 { get; set; }
+
         // Logical link to StyleSellLocation.EntityID (same CompanyID) - no DB foreign key exists
         public Guid? StyleSellLocationID { get; set; }
         public decimal? StylePriceExTax1 { get; set; }

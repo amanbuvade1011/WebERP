@@ -315,6 +315,108 @@ namespace NicheWebErpAPI.Repository.Repo
                 .Where(a => a.CompanyID == companyId && a.TransactionToID == invoiceId)
                 .SumAsync(a => (decimal?)a.Amount) ?? 0;
 
+        // Shared by the two Sprint 12 dashboard aggregates below - same fetch-then-compute shape
+        // as GetPagedAsync above (not reused directly, to avoid touching that already-verified
+        // method), so the dashboard's numbers use the exact same ComputeStatus logic as the
+        // Invoices list itself.
+        private async Task<List<(TransactionBase Header, Firm? Firm, decimal Paid, InvoiceStatus Status)>> GetInvoiceRowsWithStatusAsync(Guid companyId)
+        {
+            var headers = await _headerService.Query()
+                .Where(h => h.CompanyID == companyId && h.EntityClassName == InvoiceClass)
+                .ToListAsync();
+            var allocations = await _allocationService.Query().Where(a => a.CompanyID == companyId).ToListAsync();
+            var firms = await _firmService.Query().Where(f => f.CompanyID == companyId).ToListAsync();
+            var now = DateTime.UtcNow;
+
+            return headers.Select(h =>
+            {
+                var paid = allocations.Where(a => a.TransactionToID == h.EntityID).Sum(a => a.Amount);
+                var (status, _) = ComputeStatus(h.Amount1, paid, h.PaymentDueDate, now);
+                var firm = firms.FirstOrDefault(f => f.EntityID == h.OtherPartyID);
+                return (h, firm, paid, status);
+            }).ToList();
+        }
+
+        public async Task<InvoiceStatusSummaryDto> GetStatusSummaryAsync(Guid companyId)
+        {
+            var rows = await GetInvoiceRowsWithStatusAsync(companyId);
+            var dto = new InvoiceStatusSummaryDto();
+            foreach (var r in rows)
+            {
+                switch (r.Status)
+                {
+                    case InvoiceStatus.Paid:
+                        dto.PaidCount++;
+                        dto.PaidAmount += r.Header.Amount1;
+                        break;
+                    case InvoiceStatus.Pending:
+                        dto.PendingCount++;
+                        dto.PendingAmount += r.Header.Amount1;
+                        break;
+                    case InvoiceStatus.Overdue:
+                        dto.OverdueCount++;
+                        dto.OverdueAmount += r.Header.Amount1;
+                        break;
+                }
+            }
+            return dto;
+        }
+
+        public async Task<List<ArAgingBucketDto>> GetArAgingAsync(Guid companyId)
+        {
+            var rows = await GetInvoiceRowsWithStatusAsync(companyId);
+            var now = DateTime.UtcNow;
+
+            var buckets = new List<ArAgingBucketDto>
+            {
+                new() { Label = "1–30 days" },
+                new() { Label = "31–60 days" },
+                new() { Label = "61–90 days" },
+                new() { Label = "90+ days" }
+            };
+
+            foreach (var r in rows.Where(r => r.Status == InvoiceStatus.Overdue && r.Header.PaymentDueDate.HasValue))
+            {
+                var daysOverdue = (now - r.Header.PaymentDueDate!.Value).TotalDays;
+                var remaining = r.Header.Amount1 - r.Paid;
+                var idx = daysOverdue <= 30 ? 0 : daysOverdue <= 60 ? 1 : daysOverdue <= 90 ? 2 : 3;
+                buckets[idx].Count++;
+                buckets[idx].Amount += remaining;
+            }
+
+            return buckets;
+        }
+
+        public async Task<List<FirmOverCreditLimitDto>> GetFirmsOverCreditLimitAsync(Guid companyId)
+        {
+            var rows = await GetInvoiceRowsWithStatusAsync(companyId);
+            var outstandingByFirm = rows
+                .Where(r => r.Status != InvoiceStatus.Paid && r.Firm is not null)
+                .GroupBy(r => r.Firm!.EntityID)
+                .ToDictionary(g => g.Key, g => g.Sum(r => r.Header.Amount1 - r.Paid));
+
+            var firmsWithLimit = await _firmService.Query()
+                .Where(f => f.CompanyID == companyId && f.CreditLimit > 0)
+                .ToListAsync();
+
+            var result = new List<FirmOverCreditLimitDto>();
+            foreach (var firm in firmsWithLimit)
+            {
+                var outstanding = outstandingByFirm.TryGetValue(firm.EntityID, out var amt) ? amt : 0;
+                if (outstanding > firm.CreditLimit)
+                {
+                    result.Add(new FirmOverCreditLimitDto
+                    {
+                        FirmId = firm.EntityID,
+                        FirmName = firm.TradingName,
+                        Outstanding = outstanding,
+                        CreditLimit = firm.CreditLimit
+                    });
+                }
+            }
+            return result;
+        }
+
         public Task AddHeaderAsync(TransactionBase header) => _headerService.AddAsync(header);
         public Task AddLineAsync(TransactionLine line) => _lineService.AddAsync(line);
         public Task AddQuantityAsync(TransactionQuantity quantity) => _quantityService.AddAsync(quantity);

@@ -12,11 +12,14 @@ namespace NicheWebErpAPI.Controllers
     {
         private readonly ISalesOrderService _salesOrderService;
         private readonly IInvoiceService _invoiceService;
+        private readonly ICuttingSheetService _cuttingSheetService;
 
-        public SalesOrdersController(ISalesOrderService salesOrderService, IInvoiceService invoiceService)
+        public SalesOrdersController(
+            ISalesOrderService salesOrderService, IInvoiceService invoiceService, ICuttingSheetService cuttingSheetService)
         {
             _salesOrderService = salesOrderService;
             _invoiceService = invoiceService;
+            _cuttingSheetService = cuttingSheetService;
         }
 
         // GET api/SalesOrders/GetAllSalesOrders
@@ -121,6 +124,42 @@ namespace NicheWebErpAPI.Controllers
             try
             {
                 return Ok(await _invoiceService.GenerateFromOrderAsync(id));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // GET api/SalesOrders/{id}/CuttingSheetPreview
+        [HttpGet("{id:guid}/CuttingSheetPreview")]
+        public async Task<ActionResult<List<CuttingSheetPreviewGroupDto>>> CuttingSheetPreview(Guid id)
+        {
+            try
+            {
+                return Ok(await _cuttingSheetService.PreviewFromOrderAsync(id));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST api/SalesOrders/{id}/GenerateCuttingSheet
+        [HttpPost("{id:guid}/GenerateCuttingSheet")]
+        public async Task<ActionResult<List<CuttingSheetDetailDto>>> GenerateCuttingSheet(Guid id)
+        {
+            try
+            {
+                return Ok(await _cuttingSheetService.GenerateFromOrderAsync(id));
             }
             catch (KeyNotFoundException ex)
             {

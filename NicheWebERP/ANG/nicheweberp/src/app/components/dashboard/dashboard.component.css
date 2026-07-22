@@ -8,17 +8,23 @@
 
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
   .kpi-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 460px) {
   .kpi-grid {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -33,6 +39,24 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+}
+
+.kpi-tile-clickable {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.kpi-tile-clickable:hover {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.kpi-tile:disabled {
+  cursor: default;
 }
 
 .kpi-label {
@@ -46,7 +70,6 @@
   font-weight: 650;
   letter-spacing: -0.015em;
   color: var(--color-text);
-  font-variant-numeric: tabular-nums;
 }
 
 .kpi-footer {
@@ -55,6 +78,7 @@
   gap: 6px;
   font-size: 12.5px;
   margin-top: 2px;
+  flex-wrap: wrap;
 }
 
 .kpi-delta {
@@ -62,15 +86,12 @@
   align-items: center;
   gap: 2px;
   font-weight: 650;
+  font-variant-numeric: tabular-nums;
 }
 
-.kpi-delta.delta-up {
-  color: var(--status-good-fg);
-}
-
-.kpi-delta.delta-down {
-  color: var(--status-critical-fg);
-}
+.kpi-delta.delta-up { color: var(--status-good-fg); }
+.kpi-delta.delta-down { color: var(--status-critical-fg); }
+.kpi-delta.delta-neutral { color: var(--color-text-secondary); }
 
 .kpi-delta-label {
   color: var(--color-text-secondary);
@@ -82,6 +103,62 @@
   margin-top: 6px;
   color: var(--color-accent);
   opacity: 0.85;
+}
+
+/* ---------- Needs Attention ---------- */
+
+.attention-card {
+  padding-bottom: 4px;
+}
+
+.attention-list {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px 12px;
+}
+
+.attention-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 12px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.attention-row:hover {
+  background: var(--color-bg);
+}
+
+.attention-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.attention-icon-critical { background: var(--status-critical-bg); color: var(--status-critical-fg); }
+.attention-icon-warning { background: var(--status-warning-bg); color: var(--status-warning-fg); }
+
+.attention-message {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.attention-chevron {
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
 }
 
 /* ---------- Dashboard grid ---------- */
@@ -123,49 +200,114 @@
   margin: 2px 0 0;
 }
 
-/* ---------- Revenue bar chart ---------- */
+/* ---------- Revenue line/area chart ---------- */
 
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  height: 180px;
-  padding: 16px 20px 20px;
+.chart-card {
+  padding-bottom: 4px;
 }
 
-.bar-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
+.line-chart-wrap {
+  position: relative;
+  padding: 16px 20px 26px 46px;
+  height: 200px;
 }
 
-.bar-track {
-  flex: 1;
+.line-chart {
   width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.chart-gridline {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.chart-area {
+  fill: var(--color-accent);
+  opacity: 0.1;
+  stroke: none;
+}
+
+.chart-line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chart-dot {
+  fill: var(--color-accent);
+  stroke: var(--color-surface);
+  stroke-width: 2;
+}
+
+.chart-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.chart-y-labels {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 26px;
+  width: 42px;
+  pointer-events: none;
+}
+
+.chart-y-labels span {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart-x-labels {
+  position: absolute;
+  left: 46px;
+  right: 16px;
+  bottom: 4px;
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  justify-content: space-between;
+  pointer-events: none;
 }
 
-.bar-fill {
-  width: 56%;
-  min-height: 3px;
-  border-radius: 4px 4px 0 0;
-  background: var(--color-accent);
-  transition: height 0.3s ease, background 0.15s ease;
-}
-
-.bar-fill:hover {
-  background: color-mix(in srgb, var(--color-accent) 85%, black);
-}
-
-.bar-label {
-  margin-top: 8px;
+.chart-x-labels span {
   font-size: 11.5px;
   font-weight: 550;
   color: var(--color-text-secondary);
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, -130%);
+  background: var(--color-text);
+  color: var(--color-surface);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow-md);
+  z-index: 2;
+}
+
+.chart-tooltip-value {
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.chart-tooltip-label {
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 /* ---------- Order pipeline (ordinal ramp) ---------- */
@@ -179,7 +321,7 @@
 
 .stage-row {
   display: grid;
-  grid-template-columns: 84px 1fr 30px;
+  grid-template-columns: 84px 1fr 40px;
   align-items: center;
   gap: 12px;
 }
@@ -216,6 +358,59 @@
   color: var(--color-text);
 }
 
+/* ---------- Invoice status (stacked bar, part-to-whole) ---------- */
+
+.stacked-bar-wrap {
+  padding: 10px 20px 6px;
+}
+
+.stacked-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  gap: 2px;
+  background: var(--color-bg);
+}
+
+.stacked-segment {
+  height: 100%;
+  min-width: 2px;
+  transition: width 0.3s ease, opacity 0.15s ease;
+}
+
+.stacked-segment.status-good { background: var(--status-good-fg); }
+.stacked-segment.status-warning { background: var(--status-warning-fg); }
+.stacked-segment.status-critical { background: var(--status-critical-fg); }
+.stacked-segment:hover { opacity: 0.8; }
+
+.stacked-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 550;
+}
+
+.legend-swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-swatch.status-good { background: var(--status-good-fg); }
+.legend-swatch.status-warning { background: var(--status-warning-fg); }
+.legend-swatch.status-critical { background: var(--status-critical-fg); }
+
 /* ---------- Category breakdown ---------- */
 
 .category-bars {
@@ -227,7 +422,7 @@
 
 .category-row {
   display: grid;
-  grid-template-columns: 108px 1fr 26px;
+  grid-template-columns: 108px 1fr 34px;
   align-items: center;
   gap: 10px;
 }
@@ -262,12 +457,146 @@
   color: var(--color-text);
 }
 
-/* ---------- Invoice status ---------- */
+.state-panel-compact {
+  padding: 20px;
+}
+
+/* ---------- AR aging (ordinal severity ramp) ---------- */
+
+.aging-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 14px 20px 20px;
+}
+
+.aging-row {
+  display: grid;
+  grid-template-columns: 74px 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.aging-name {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.aging-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.aging-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Older debt reads as more severe: graduated accent, oldest bucket carries the critical tone. */
+.aging-fill-1 { background: color-mix(in oklch, var(--color-accent) 45%, var(--color-bg)); }
+.aging-fill-2 { background: color-mix(in oklch, var(--color-accent) 70%, var(--color-bg)); }
+.aging-fill-3 { background: color-mix(in oklch, var(--status-warning-fg) 80%, var(--color-bg)); }
+.aging-fill-4 { background: var(--status-critical-fg); }
+
+.aging-amount {
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-text);
+  white-space: nowrap;
+}
+
+/* ---------- Top customers ---------- */
+
+.customer-bars {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 14px;
+}
+
+.customer-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1.4fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.customer-row:hover {
+  background: var(--color-bg);
+}
+
+.customer-name {
+  font-size: 13px;
+  font-weight: 550;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.customer-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--color-accent);
+  transition: width 0.3s ease;
+}
+
+.customer-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 92px;
+}
+
+.customer-revenue {
+  font-size: 13px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+.customer-orders {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 560px) {
+  .customer-row {
+    grid-template-columns: 1fr auto;
+  }
+  .customer-track {
+    display: none;
+  }
+}
+
+/* ---------- Invoice status detail rows (table view) ---------- */
 
 .invoice-status-list {
   display: flex;
   flex-direction: column;
-  padding: 8px 12px 16px;
+  padding: 4px 12px 16px;
 }
 
 .invoice-status-row {
@@ -305,8 +634,19 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 12px 20px;
+  border: none;
   border-bottom: 1px solid var(--color-border);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.activity-row:hover {
+  background: var(--color-bg);
 }
 
 .activity-row:last-child {
@@ -325,7 +665,6 @@
 
 .activity-icon-order { background: var(--chip-indigo-bg); color: var(--chip-indigo-fg); }
 .activity-icon-invoice { background: var(--chip-emerald-bg); color: var(--chip-emerald-fg); }
-.activity-icon-product { background: var(--chip-amber-bg); color: var(--chip-amber-fg); }
 
 .activity-body {
   display: flex;

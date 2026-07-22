@@ -2,19 +2,13 @@
   <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
     <div>
       <h1 class="page-title mb-1">Dashboard</h1>
-      <p class="page-subtitle mb-0">Live overview of sales, invoices, and inventory</p>
+      <p class="page-subtitle mb-0">Live overview of sales, invoicing, manufacturing, and cash</p>
     </div>
 
     <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
       <span class="spinner" *ngIf="loading"></span>
       <svg *ngIf="!loading" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="15" height="15">
-        <path
-          d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+        <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       Refresh
     </button>
@@ -43,48 +37,120 @@
 
   <ng-container *ngIf="data as d">
     <div class="kpi-grid">
-      <div class="kpi-tile" *ngFor="let kpi of d.kpis">
+      <button
+        type="button"
+        class="kpi-tile"
+        [class.kpi-tile-clickable]="kpi.linkType"
+        *ngFor="let kpi of d.kpis"
+        (click)="openKpi(kpi)"
+        [disabled]="!kpi.linkType"
+      >
         <span class="kpi-label">{{ kpi.label }}</span>
-        <span class="kpi-value">{{ kpi.value }}</span>
+        <span class="kpi-value">{{ kpiValueDisplay(kpi) }}</span>
         <div class="kpi-footer">
-          <span class="kpi-delta" [ngClass]="deltaClass(kpi)" *ngIf="kpi.trend.length">
+          <span class="kpi-delta" [ngClass]="deltaClass(kpi)" *ngIf="kpi.deltaPercent !== null">
             <svg *ngIf="deltaClass(kpi) === 'delta-up'" viewBox="0 0 12 12" width="10" height="10" fill="none">
               <path d="M6 9.5V2.5M6 2.5L2.5 6M6 2.5L9.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <svg *ngIf="deltaClass(kpi) === 'delta-down'" viewBox="0 0 12 12" width="10" height="10" fill="none">
               <path d="M6 2.5V9.5M6 9.5L2.5 6M6 9.5L9.5 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            {{ kpi.delta }}%
+            {{ kpi.deltaPercent }}%
           </span>
           <span class="kpi-delta-label">{{ kpi.deltaLabel }}</span>
         </div>
         <svg class="kpi-sparkline" *ngIf="kpi.trend.length" viewBox="0 0 100 28" preserveAspectRatio="none">
           <polyline [attr.points]="sparklinePoints(kpi.trend)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
+      </button>
+    </div>
+
+    <!-- Needs Attention: exception-based, actionable panel - the counterpart to the passive
+         KPI/chart data below. Each row is click-through to the relevant list/detail screen. -->
+    <div class="data-card attention-card" *ngIf="d.needsAttention.length">
+      <div class="card-heading">
+        <h2>Needs Attention</h2>
+        <p>{{ d.needsAttention.length }} {{ d.needsAttention.length === 1 ? 'item needs' : 'items need' }} a look</p>
+      </div>
+      <div class="attention-list">
+        <button type="button" class="attention-row" *ngFor="let item of d.needsAttention" (click)="openAttentionItem(item)">
+          <span class="attention-icon" [ngClass]="'attention-icon-' + item.severity">
+            <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+              <path [attr.d]="attentionIconPath(item)" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+          <span class="attention-message">{{ item.message }}</span>
+          <svg class="attention-chevron" viewBox="0 0 20 20" fill="none" width="14" height="14">
+            <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
       </div>
     </div>
 
     <div class="dash-grid">
       <div class="dash-col-main">
+        <!-- Revenue trend: line + area, single series (sequential/accent hue), hairline
+             gridlines, hover crosshair + tooltip. -->
         <div class="data-card chart-card">
           <div class="card-heading">
             <h2>Monthly Revenue</h2>
             <p>Last 6 months</p>
           </div>
-          <div class="bar-chart" role="img" aria-label="Monthly revenue, last six months">
-            <div class="bar-col" *ngFor="let m of d.monthlyRevenue">
-              <div class="bar-track">
-                <div
-                  class="bar-fill"
-                  [style.height.%]="barHeightPct(m.amount, revenueValues(d))"
-                  [attr.title]="m.month + ': ' + currency(m.amount)"
-                ></div>
-              </div>
-              <span class="bar-label">{{ m.month }}</span>
+          <div class="line-chart-wrap">
+            <svg
+              class="line-chart"
+              [attr.viewBox]="'0 0 ' + chartW + ' ' + chartH"
+              preserveAspectRatio="none"
+              role="img"
+              aria-label="Monthly revenue, last six months"
+            >
+              <line
+                *ngFor="let tick of yAxisTicks(d)"
+                class="chart-gridline"
+                x1="8"
+                [attr.x2]="chartW - 16"
+                [attr.y1]="tick.y"
+                [attr.y2]="tick.y"
+              ></line>
+
+              <path class="chart-area" [attr.d]="areaPath(d)"></path>
+              <path class="chart-line" [attr.d]="linePath(d)"></path>
+
+              <g *ngFor="let p of linePoints(d); let i = index">
+                <circle *ngIf="hoveredMonth === i" class="chart-dot" [attr.cx]="p.x" [attr.cy]="p.y" r="4"></circle>
+                <rect
+                  class="chart-hit"
+                  [attr.x]="p.x - (chartW / d.revenueTrend.length) / 2"
+                  y="0"
+                  [attr.width]="chartW / d.revenueTrend.length"
+                  [attr.height]="chartH"
+                  (mouseenter)="onHoverMonth(i)"
+                  (mouseleave)="onHoverMonth(null)"
+                ></rect>
+              </g>
+            </svg>
+
+            <div class="chart-y-labels">
+              <span *ngFor="let tick of yAxisTicks(d)" [style.top.%]="(tick.y / chartH) * 100">{{ tick.label }}</span>
+            </div>
+
+            <div class="chart-x-labels">
+              <span *ngFor="let m of d.revenueTrend">{{ m.month }}</span>
+            </div>
+
+            <div
+              class="chart-tooltip"
+              *ngIf="revenueTooltip(d) as tip"
+              [style.left.%]="(tip.x / chartW) * 100"
+              [style.top.%]="(tip.y / chartH) * 100"
+            >
+              <span class="chart-tooltip-value">{{ tip.lines[0].value }}</span>
+              <span class="chart-tooltip-label">{{ tip.lines[0].label }}</span>
             </div>
           </div>
         </div>
 
+        <!-- Order pipeline: ordered stages, not identity - ordinal ramp (one hue, graduated). -->
         <div class="data-card">
           <div class="card-heading">
             <h2>Order Pipeline</h2>
@@ -93,38 +159,38 @@
           <div class="stage-bars">
             <div class="stage-row" *ngFor="let s of d.orderStages; let idx = index">
               <span class="stage-name">{{ s.stage }}</span>
-              <div class="stage-track">
-                <div
-                  class="stage-fill"
-                  [ngClass]="'stage-fill-' + (idx + 1)"
-                  [style.width.%]="stagePct(s.count, stageValues(d))"
-                ></div>
+              <div class="stage-track" (mouseenter)="hoveredStage = idx" (mouseleave)="hoveredStage = null">
+                <div class="stage-fill" [ngClass]="'stage-fill-' + (idx + 1)" [style.width.%]="stagePct(s.count, d.orderStages)"></div>
               </div>
-              <span class="stage-count">{{ s.count }}</span>
+              <span class="stage-count">{{ compactCount(s.count) }}</span>
             </div>
           </div>
         </div>
       </div>
 
       <div class="dash-col-side">
-        <div class="data-card">
-          <div class="card-heading">
-            <h2>Top Categories</h2>
-          </div>
-          <div class="category-bars">
-            <div class="category-row" *ngFor="let c of d.categoryBreakdown">
-              <span class="category-name">{{ c.category }}</span>
-              <div class="category-track">
-                <div class="category-fill" [style.width.%]="barHeightPct(c.value, categoryValues(d))"></div>
-              </div>
-              <span class="category-value">{{ c.value }}</span>
-            </div>
-          </div>
-        </div>
-
+        <!-- Invoice status: part-to-whole -> stacked bar. Status colors carry meaning here (these
+             ARE states), always paired with the legend + numeric table below. -->
         <div class="data-card">
           <div class="card-heading">
             <h2>Invoices by Status</h2>
+          </div>
+          <div class="stacked-bar-wrap">
+            <div class="stacked-bar">
+              <div
+                class="stacked-segment"
+                *ngFor="let seg of invoiceStatusSegments(d); let i = index"
+                [ngClass]="invoiceStatusClass(seg.status)"
+                [style.width.%]="seg.pct"
+                (mouseenter)="hoveredInvoiceStatus = i"
+                (mouseleave)="hoveredInvoiceStatus = null"
+              ></div>
+            </div>
+            <div class="stacked-legend">
+              <span class="legend-item" *ngFor="let s of d.invoiceStatus">
+                <span class="legend-swatch" [ngClass]="invoiceStatusClass(s.status)"></span>{{ s.status }}
+              </span>
+            </div>
           </div>
           <div class="invoice-status-list">
             <div class="invoice-status-row" *ngFor="let s of d.invoiceStatus">
@@ -136,6 +202,70 @@
             </div>
           </div>
         </div>
+
+        <!-- AR aging: overdue balances by how far past due (ordinal severity ramp - older = darker
+             / more prominent). The actionable breakdown behind the "AR at Risk" KPI. -->
+        <div class="data-card">
+          <div class="card-heading">
+            <h2>Overdue Aging</h2>
+            <p>{{ currency(arAgingTotal) }} overdue across all buckets</p>
+          </div>
+          <div class="aging-bars" *ngIf="arAgingTotal > 0; else noOverdue">
+            <div class="aging-row" *ngFor="let b of d.arAging; let idx = index">
+              <span class="aging-name">{{ b.label }}</span>
+              <div class="aging-track">
+                <div class="aging-fill" [ngClass]="'aging-fill-' + (idx + 1)" [style.width.%]="agingPct(b.amount, d.arAging)"></div>
+              </div>
+              <span class="aging-amount">{{ currency(b.amount) }}</span>
+            </div>
+          </div>
+          <ng-template #noOverdue>
+            <div class="state-panel state-panel-compact">
+              <p class="state-subtitle">Nothing overdue — all invoices are current.</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Category breakdown: compare magnitude -> bar, single sequential hue. -->
+        <div class="data-card">
+          <div class="card-heading">
+            <h2>Top Categories</h2>
+          </div>
+          <div class="category-bars" *ngIf="d.categoryBreakdown.length; else noCategoryData">
+            <div class="category-row" *ngFor="let c of d.categoryBreakdown; let idx = index">
+              <span class="category-name">{{ c.category }}</span>
+              <div class="category-track" (mouseenter)="hoveredCategory = idx" (mouseleave)="hoveredCategory = null">
+                <div class="category-fill" [style.width.%]="categoryPct(c.count, d.categoryBreakdown)"></div>
+              </div>
+              <span class="category-value">{{ compactCount(c.count) }}</span>
+            </div>
+          </div>
+          <ng-template #noCategoryData>
+            <div class="state-panel state-panel-compact">
+              <p class="state-subtitle">No categorized products yet.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top customers: magnitude bars, click-through to the firm's detail. -->
+    <div class="data-card" *ngIf="d.topCustomers.length">
+      <div class="card-heading">
+        <h2>Top Customers</h2>
+        <p>By total order value</p>
+      </div>
+      <div class="customer-bars">
+        <button type="button" class="customer-row" *ngFor="let c of d.topCustomers" (click)="openCustomer(c)">
+          <span class="customer-name">{{ c.firmName }}</span>
+          <div class="customer-track">
+            <div class="customer-fill" [style.width.%]="customerPct(c.revenue, d.topCustomers)"></div>
+          </div>
+          <span class="customer-meta">
+            <span class="customer-revenue">{{ currency(c.revenue) }}</span>
+            <span class="customer-orders">{{ c.orderCount }} {{ c.orderCount === 1 ? 'order' : 'orders' }}</span>
+          </span>
+        </button>
       </div>
     </div>
 
@@ -144,7 +274,7 @@
         <h2>Recent Activity</h2>
       </div>
       <div class="activity-list">
-        <div class="activity-row" *ngFor="let a of d.recentActivity">
+        <button type="button" class="activity-row" *ngFor="let a of d.recentActivity" (click)="openActivityItem(a)">
           <span class="activity-icon" [ngClass]="activityIconClass(a.kind)">
             <svg *ngIf="a.kind === 'order'" viewBox="0 0 20 20" fill="none" width="14" height="14">
               <path d="M4 6h12M4 10h12M4 14h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -153,20 +283,14 @@
               <rect x="5" y="3" width="10" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5" />
               <path d="M7.5 7.5h5M7.5 10.5h5M7.5 13.5h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
             </svg>
-            <svg *ngIf="a.kind === 'product'" viewBox="0 0 20 20" fill="none" width="14" height="14">
-              <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
-              <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
-              <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
-              <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5" />
-            </svg>
           </span>
-          <div class="activity-body">
+          <span class="activity-body">
             <span class="activity-title">{{ a.title }}</span>
             <span class="activity-subtitle">{{ a.subtitle }}</span>
-          </div>
+          </span>
           <span class="activity-amount" *ngIf="a.amount">{{ currency(a.amount) }}</span>
           <span class="activity-time">{{ relativeTime(a.timestamp) }}</span>
-        </div>
+        </button>
       </div>
     </div>
   </ng-container>

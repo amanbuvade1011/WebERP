@@ -54,6 +54,29 @@ namespace NicheWebErpAPI.Services.Serv
                 EntityID = Guid.NewGuid(),
                 EntityClassName = PaymentRepository.PaymentClass,
                 LaneID = Guid.Empty,
+                PreviousProcessID = Guid.Empty,
+                DeliveryCountryID = Guid.Empty,
+                NumLinesOfStyle1 = 0,
+                TotalWeight1 = 0,
+                TotalQuantitiesVariance1 = 0,
+                TotalQuantitiesProcessed1 = 0,
+                TotalQuantitiesHeld1 = 0,
+                TotalQuantitiesTransitIn1 = 0,
+                TotalQuantitiesRequiredOut1 = 0,
+                TotalQuantitiesTransitOut1 = 0,
+                TotalQuantitiesPurchaseOrder1 = 0,
+                TotalRentalHeld1 = 0,
+                TotalRentalOrder1 = 0,
+                TotalRentalOut1 = 0,
+                ExchangeRate = 1,
+                OtherPartyCurrencyAmount = 0,
+                OtherPartyExchangeRate = 1,
+                CashbookCurrencyAmount = 0,
+                OtherPartyClassName1 = "WholesaleCustomer",
+                Sign1 = 1,
+                TotalQuantitiesFaulty1 = 0,
+                TotalQuantitiesSalesOrderPerson1 = 0,
+                TotalQuantitiesSalesOrderFirm1 = 0,
                 Narration = dto.Narration,
                 TransactionDate = now,
                 OtherPartyID = invoiceHeader.OtherPartyID,
@@ -62,6 +85,7 @@ namespace NicheWebErpAPI.Services.Serv
                 Amount1 = dto.Amount,
                 PricePointID = invoiceHeader.PricePointID,
                 PaymentMethodID = paymentMethod.EntityID,
+                CashbookID = dto.CashbookId,
                 AgentID = Guid.Empty,
                 RepresentativeID = Guid.Empty,
                 IsDraft = false,
@@ -75,6 +99,13 @@ namespace NicheWebErpAPI.Services.Serv
                 UpdatedByID = updatedById
             };
             await _repository.AddPaymentAsync(payment);
+            // Saved separately before the FinancialAllocation insert below - a trigger on
+            // FinancialAllocation validates TransactionFromID against a real, already-committed
+            // TransactionBase row ("the TransactionFrom is missing or incorrect"), and EF's
+            // default batching doesn't guarantee the Payment insert lands first since there's no
+            // real FK relationship configured between them (matching this DB's no-FK convention).
+            // Discovered live 2026-07-22 testing Sprint 10's payment-to-cashbook integration.
+            await _repository.SaveChangesAsync();
 
             var allocation = new FinancialAllocation
             {

@@ -26,6 +26,13 @@ namespace NicheWebErpAPI.Repository.IRepo
         Task<InvoiceDetailDto?> GetDetailAsync(Guid companyId, Guid id);
         Task<decimal> GetAllocatedAmountAsync(Guid companyId, Guid invoiceId);
 
+        // Added Sprint 12 (Dashboard) - aggregate counterparts to GetPagedAsync's per-invoice
+        // status computation, without paging through the whole set. Reuses the same
+        // ComputeStatus logic so the dashboard's numbers can never drift from the Invoices list's.
+        Task<InvoiceStatusSummaryDto> GetStatusSummaryAsync(Guid companyId);
+        Task<List<FirmOverCreditLimitDto>> GetFirmsOverCreditLimitAsync(Guid companyId);
+        Task<List<ArAgingBucketDto>> GetArAgingAsync(Guid companyId);
+
         Task AddHeaderAsync(TransactionBase header);
         Task AddLineAsync(TransactionLine line);
         Task AddQuantityAsync(TransactionQuantity quantity);

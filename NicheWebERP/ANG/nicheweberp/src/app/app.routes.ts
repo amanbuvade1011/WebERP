@@ -19,6 +19,14 @@ import { LoginComponent } from './components/login/login.component';
 import { SalesOrderDetailComponent } from './components/sales-order-detail/sales-order-detail.component';
 import { InvoiceDetailComponent } from './components/invoice-detail/invoice-detail.component';
 import { PromotionsComponent } from './components/promotions/promotions.component';
+import { CuttingSheetsComponent } from './components/cutting-sheets/cutting-sheets.component';
+import { CuttingSheetDetailComponent } from './components/cutting-sheet-detail/cutting-sheet-detail.component';
+import { MakingSheetsComponent } from './components/making-sheets/making-sheets.component';
+import { MakingSheetDetailComponent } from './components/making-sheet-detail/making-sheet-detail.component';
+import { CashbooksComponent } from './components/cashbooks/cashbooks.component';
+import { CashInOutComponent } from './components/cash-in-out/cash-in-out.component';
+import { BankDepositsComponent } from './components/bank-deposits/bank-deposits.component';
+import { ReconciliationsComponent } from './components/reconciliations/reconciliations.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -40,6 +48,14 @@ export const routes: Routes = [
   { path: 'invoices', component: InvoicesComponent, canActivate: [authGuard] },
   { path: 'invoices/:id', component: InvoiceDetailComponent, canActivate: [authGuard] },
   { path: 'promotions', component: PromotionsComponent, canActivate: [authGuard] },
+  { path: 'cutting-sheets', component: CuttingSheetsComponent, canActivate: [authGuard] },
+  { path: 'cutting-sheets/:id', component: CuttingSheetDetailComponent, canActivate: [authGuard] },
+  { path: 'making-sheets', component: MakingSheetsComponent, canActivate: [authGuard] },
+  { path: 'making-sheets/:id', component: MakingSheetDetailComponent, canActivate: [authGuard] },
+  { path: 'cashbooks', component: CashbooksComponent, canActivate: [authGuard] },
+  { path: 'cash-in-out', component: CashInOutComponent, canActivate: [authGuard] },
+  { path: 'bank-deposits', component: BankDepositsComponent, canActivate: [authGuard] },
+  { path: 'reconciliations', component: ReconciliationsComponent, canActivate: [authGuard] },
   { path: 'company', component: CompanyComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationsComponent, canActivate: [authGuard] },
   { path: 'users', component: ErpUsersComponent, canActivate: [authGuard] }

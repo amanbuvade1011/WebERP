@@ -5,8 +5,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { InvoiceService } from '../../services/invoice.service';
 import { PaymentMethodService } from '../../services/payment-method.service';
+import { FinanceService } from '../../services/finance.service';
 import { InvoiceDetail } from '../../models/invoice.model';
 import { PaymentMethod } from '../../models/payment-method.model';
+import { Cashbook } from '../../models/finance.model';
 
 @Component({
   selector: 'app-invoice-detail',
@@ -19,17 +21,25 @@ export class InvoiceDetailComponent implements OnInit {
   invoiceId!: string;
   invoice: InvoiceDetail | null = null;
   paymentMethods: PaymentMethod[] = [];
+  cashbooks: Cashbook[] = [];
 
   loading = true;
   error = false;
 
   paymentAmount: number | null = null;
   paymentMethodId = '';
+  paymentCashbookId = '';
   paymentNarration = '';
   recording = false;
   recordError = '';
 
-  constructor(private route: ActivatedRoute, private router: Router, private invoiceService: InvoiceService, private paymentMethodService: PaymentMethodService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private invoiceService: InvoiceService,
+    private paymentMethodService: PaymentMethodService,
+    private financeService: FinanceService
+  ) {}
 
   ngOnInit(): void {
     this.invoiceId = this.route.snapshot.paramMap.get('id')!;
@@ -42,11 +52,13 @@ export class InvoiceDetailComponent implements OnInit {
 
     forkJoin({
       invoice: this.invoiceService.getInvoiceById(this.invoiceId),
-      paymentMethods: this.paymentMethodService.getAllPaymentMethods()
+      paymentMethods: this.paymentMethodService.getAllPaymentMethods(),
+      cashbooks: this.financeService.getAllCashbooks()
     }).subscribe({
-      next: ({ invoice, paymentMethods }) => {
+      next: ({ invoice, paymentMethods, cashbooks }) => {
         this.invoice = invoice;
         this.paymentMethods = paymentMethods;
+        this.cashbooks = cashbooks;
         this.paymentAmount = invoice.remainingAmount > 0 ? invoice.remainingAmount : null;
         this.loading = false;
       },
@@ -90,7 +102,8 @@ export class InvoiceDetailComponent implements OnInit {
         invoiceId: this.invoiceId,
         amount: this.paymentAmount,
         paymentMethodId: this.paymentMethodId,
-        narration: this.paymentNarration || null
+        narration: this.paymentNarration || null,
+        cashbookId: this.paymentCashbookId || null
       })
       .subscribe({
         next: (updated) => {
@@ -98,6 +111,7 @@ export class InvoiceDetailComponent implements OnInit {
           this.recording = false;
           this.paymentAmount = updated.remainingAmount > 0 ? updated.remainingAmount : null;
           this.paymentMethodId = '';
+          this.paymentCashbookId = '';
           this.paymentNarration = '';
         },
         error: (err) => {

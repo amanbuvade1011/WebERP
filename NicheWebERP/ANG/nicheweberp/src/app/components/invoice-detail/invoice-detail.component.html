@@ -146,6 +146,13 @@
             </select>
           </div>
           <div class="field-group">
+            <label class="form-label">Cashbook (optional)</label>
+            <select class="form-control" name="paymentCashbookId" [(ngModel)]="paymentCashbookId">
+              <option value="">None</option>
+              <option *ngFor="let c of cashbooks" [value]="c.id">{{ c.name }}</option>
+            </select>
+          </div>
+          <div class="field-group">
             <label class="form-label">Narration (optional)</label>
             <input type="text" class="form-control" name="paymentNarration" [(ngModel)]="paymentNarration" />
           </div>

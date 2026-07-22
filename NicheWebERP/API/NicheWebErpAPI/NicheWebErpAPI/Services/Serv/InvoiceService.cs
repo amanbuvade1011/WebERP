@@ -33,6 +33,15 @@ namespace NicheWebErpAPI.Services.Serv
             await _repository.GetDetailAsync(_currentUserService.CompanyId, id)
                 ?? throw new KeyNotFoundException($"Invoice {id} not found.");
 
+        public Task<InvoiceStatusSummaryDto> GetStatusSummaryAsync() =>
+            _repository.GetStatusSummaryAsync(_currentUserService.CompanyId);
+
+        public Task<List<FirmOverCreditLimitDto>> GetFirmsOverCreditLimitAsync() =>
+            _repository.GetFirmsOverCreditLimitAsync(_currentUserService.CompanyId);
+
+        public Task<List<ArAgingBucketDto>> GetArAgingAsync() =>
+            _repository.GetArAgingAsync(_currentUserService.CompanyId);
+
         public async Task<InvoiceDetailDto> GenerateFromOrderAsync(Guid orderId)
         {
             var companyId = _currentUserService.CompanyId;
@@ -90,6 +99,13 @@ namespace NicheWebErpAPI.Services.Serv
                     PricePointID = orderLine.PricePointID,
                     StylePriceTax1 = orderLine.StylePriceTax1,
                     LineQuantity1 = orderLine.LineQuantity1,
+                    TaxJurisdictionCategoryID = Guid.Empty,
+                    IsManualLine1 = false,
+                    ManualLineAmountExTax = 0,
+                    ManualLineTax = 0,
+                    FaultTypeID = Guid.Empty,
+                    DiscountExTax1 = 0,
+                    DiscountTax1 = 0,
                     LastUpdated = now,
                     UpdatedByID = updatedById
                 };
@@ -110,6 +126,14 @@ namespace NicheWebErpAPI.Services.Serv
                         Allocated = 0,
                         SalesOrderFirm = quantity.SalesOrderFirm,
                         SalesOrderPerson = quantity.SalesOrderPerson,
+                        Variance = 0,
+                        Processed = 0,
+                        TransitIn = 0,
+                        TransitOut = 0,
+                        PurchaseOrder = 0,
+                        RentalHeld = 0,
+                        RentalOrder = 0,
+                        RentalOut = 0,
                         LastUpdated = now,
                         UpdatedByID = updatedById
                     };
@@ -125,6 +149,29 @@ namespace NicheWebErpAPI.Services.Serv
                 EntityID = invoiceId,
                 EntityClassName = InvoiceRepository.InvoiceClass,
                 LaneID = Guid.Empty,
+                PreviousProcessID = Guid.Empty,
+                DeliveryCountryID = Guid.Empty,
+                NumLinesOfStyle1 = 0,
+                TotalWeight1 = 0,
+                TotalQuantitiesVariance1 = 0,
+                TotalQuantitiesProcessed1 = 0,
+                TotalQuantitiesHeld1 = 0,
+                TotalQuantitiesTransitIn1 = 0,
+                TotalQuantitiesRequiredOut1 = 0,
+                TotalQuantitiesTransitOut1 = 0,
+                TotalQuantitiesPurchaseOrder1 = 0,
+                TotalRentalHeld1 = 0,
+                TotalRentalOrder1 = 0,
+                TotalRentalOut1 = 0,
+                ExchangeRate = 1,
+                OtherPartyCurrencyAmount = 0,
+                OtherPartyExchangeRate = 1,
+                CashbookCurrencyAmount = 0,
+                OtherPartyClassName1 = "WholesaleCustomer",
+                Sign1 = 1,
+                TotalQuantitiesFaulty1 = 0,
+                TotalQuantitiesSalesOrderPerson1 = 0,
+                TotalQuantitiesSalesOrderFirm1 = 0,
                 Narration = order.Narration,
                 TransactionDate = now,
                 OtherPartyID = order.OtherPartyID,
