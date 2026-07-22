@@ -57,6 +57,9 @@ export interface SalesOrderDetail {
   taxAmount: number;
   totalAmount: number;
   totalQuantities: number;
+  isInvoiced: boolean;
+  discountAmount: number;
+  freightAmount: number;
   lines: SalesOrderLine[];
 }
 
@@ -71,6 +74,7 @@ export interface CreateSalesOrderRequest {
   locationId: string;
   customerReferenceNo: string | null;
   narration: string | null;
+  couponCode: string | null;
   lines: CreateSalesOrderLineRequest[];
 }
 

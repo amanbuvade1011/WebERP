@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ApiURLService } from './ApiURLService.service';
 import { PagedResult } from '../models/paged-result.model';
+import { InvoiceDetail } from '../models/invoice.model';
 import {
   AddSalesOrderLineRequest,
   CreateSalesOrderRequest,
@@ -56,5 +57,9 @@ export class SalesOrderService {
 
   removeLine(id: string, lineId: string): Observable<SalesOrderDetail> {
     return this.http.delete<SalesOrderDetail>(`${ApiURLService.BASE_URL}/SalesOrders/${id}/RemoveLine/${lineId}`);
+  }
+
+  generateInvoice(id: string): Observable<InvoiceDetail> {
+    return this.http.post<InvoiceDetail>(`${ApiURLService.BASE_URL}/SalesOrders/${id}/GenerateInvoice`, {});
   }
 }

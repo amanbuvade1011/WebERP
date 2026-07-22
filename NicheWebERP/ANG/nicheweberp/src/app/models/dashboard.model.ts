@@ -23,7 +23,7 @@ export interface OrderStageBreakdown {
 }
 
 export interface InvoiceStatusBreakdown {
-  status: 'Paid' | 'Pending' | 'Overdue' | 'Draft';
+  status: 'Paid' | 'Pending' | 'Overdue';
   count: number;
   amount: number;
 }

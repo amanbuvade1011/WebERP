@@ -17,6 +17,8 @@ import { FirmDetailComponent } from './components/firm-detail/firm-detail.compon
 import { RetailCustomersListComponent } from './components/retail-customers-list/retail-customers-list.component';
 import { LoginComponent } from './components/login/login.component';
 import { SalesOrderDetailComponent } from './components/sales-order-detail/sales-order-detail.component';
+import { InvoiceDetailComponent } from './components/invoice-detail/invoice-detail.component';
+import { PromotionsComponent } from './components/promotions/promotions.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -36,6 +38,8 @@ export const routes: Routes = [
   { path: 'sales-orders', component: SalesOrdersComponent, canActivate: [authGuard] },
   { path: 'sales-orders/:id', component: SalesOrderDetailComponent, canActivate: [authGuard] },
   { path: 'invoices', component: InvoicesComponent, canActivate: [authGuard] },
+  { path: 'invoices/:id', component: InvoiceDetailComponent, canActivate: [authGuard] },
+  { path: 'promotions', component: PromotionsComponent, canActivate: [authGuard] },
   { path: 'company', component: CompanyComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationsComponent, canActivate: [authGuard] },
   { path: 'users', component: ErpUsersComponent, canActivate: [authGuard] }

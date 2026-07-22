@@ -29,6 +29,7 @@ namespace NicheWebErpAPI.Repository.Repo
         private readonly IEfCoreService<StyleSellLocation> _sellLocationService;
         private readonly IEfCoreService<ProductLocation> _productLocationService;
         private readonly IEfCoreService<PricePoint> _pricePointService;
+        private readonly IEfCoreService<TransactionDiscount> _transactionDiscountService;
 
         public SalesOrderRepository(
             IEfCoreService<TransactionBase> headerService,
@@ -44,7 +45,8 @@ namespace NicheWebErpAPI.Repository.Repo
             IEfCoreService<StylePrice> stylePriceService,
             IEfCoreService<StyleSellLocation> sellLocationService,
             IEfCoreService<ProductLocation> productLocationService,
-            IEfCoreService<PricePoint> pricePointService)
+            IEfCoreService<PricePoint> pricePointService,
+            IEfCoreService<TransactionDiscount> transactionDiscountService)
         {
             _headerService = headerService;
             _lineService = lineService;
@@ -60,6 +62,7 @@ namespace NicheWebErpAPI.Repository.Repo
             _sellLocationService = sellLocationService;
             _productLocationService = productLocationService;
             _pricePointService = pricePointService;
+            _transactionDiscountService = transactionDiscountService;
         }
 
         public Task<Firm?> GetFirmAsync(Guid companyId, Guid firmId) =>
@@ -150,7 +153,8 @@ namespace NicheWebErpAPI.Repository.Repo
                     CustomerReferenceNo = x.h.CustomerReferenceNo,
                     Status = x.h.Status1 ?? 0,
                     TotalQuantities = x.h.TotalQuantities1,
-                    TotalAmount = x.h.Amount1
+                    TotalAmount = x.h.Amount1,
+                    IsInvoiced = x.h.Status2 == 1
                 })
                 .ToListAsync();
 
@@ -194,7 +198,8 @@ namespace NicheWebErpAPI.Repository.Repo
                 SubTotalExTax = header.SubTotalStyles1,
                 TaxAmount = header.TaxAmount1,
                 TotalAmount = header.Amount1,
-                TotalQuantities = header.TotalQuantities1
+                TotalQuantities = header.TotalQuantities1,
+                IsInvoiced = header.Status2 == 1
             };
             dto.StatusName = ((SalesOrderStatus)dto.Status).ToString();
 
@@ -256,6 +261,16 @@ namespace NicheWebErpAPI.Repository.Repo
                 lineDto.SizeDescription = descriptor.SizeDescription;
             }
 
+            // Discount/freight are their own non-style TransactionLine rows (Sprint 07) - kept
+            // out of the styled Lines[] array above (which expects StyleCode/Color/Size) and
+            // surfaced as separate totals instead.
+            dto.DiscountAmount = Math.Abs(await _lineService.Query()
+                .Where(tl => tl.CompanyID == companyId && tl.TransactionID == id && tl.EntityClassName == "DiscountLine")
+                .SumAsync(tl => (decimal?)tl.LineAmountExTax1) ?? 0);
+            dto.FreightAmount = await _lineService.Query()
+                .Where(tl => tl.CompanyID == companyId && tl.TransactionID == id && tl.EntityClassName == "FreightLine")
+                .SumAsync(tl => (decimal?)tl.LineAmountExTax1) ?? 0;
+
             return dto;
         }
 
@@ -276,6 +291,7 @@ namespace NicheWebErpAPI.Repository.Repo
         public Task AddHeaderAsync(TransactionBase header) => _headerService.AddAsync(header);
         public Task AddLineAsync(TransactionLine line) => _lineService.AddAsync(line);
         public Task AddQuantityAsync(TransactionQuantity quantity) => _quantityService.AddAsync(quantity);
+        public Task AddTransactionDiscountAsync(TransactionDiscount discount) => _transactionDiscountService.AddAsync(discount);
         public void UpdateHeader(TransactionBase header) => _headerService.Update(header);
         public void UpdateLine(TransactionLine line) => _lineService.Update(line);
         public void RemoveLine(TransactionLine line) => _lineService.Remove(line);

@@ -9,6 +9,8 @@ import { FirmService } from '../../services/firm.service';
 import { LocationService } from '../../services/location.service';
 import { StyleService } from '../../services/style.service';
 import { ProductService } from '../../services/product.service';
+import { PromotionService } from '../../services/promotion.service';
+import { FreightService } from '../../services/freight.service';
 import {
   SALES_ORDER_STATUS_VALUES,
   SalesOrderDetail,
@@ -18,6 +20,7 @@ import { FirmDetail } from '../../models/firm.model';
 import { Location } from '../../models/location.model';
 import { StyleDetail } from '../../models/style.model';
 import { StockGridRow, StylePrice } from '../../models/product.model';
+import { ValidateCouponResult } from '../../models/promotion.model';
 import { EntityOption, EntityPickerComponent } from '../entity-picker/entity-picker.component';
 
 // Mirrors SalesOrderService.AllowedTransitions on the backend - kept in sync manually since it's
@@ -63,6 +66,7 @@ export class SalesOrderDetailComponent implements OnInit {
   error = false;
   saving = false;
   saveError = '';
+  generatingInvoice = false;
 
   // New-order header state.
   locations: Location[] = [];
@@ -71,6 +75,15 @@ export class SalesOrderDetailComponent implements OnInit {
   customerReferenceNo = '';
   narration = '';
   draftLines: DraftLine[] = [];
+
+  // Coupon + freight (Sprint 07) - new-order flow only. Both are estimates: the server
+  // independently validates the coupon and computes freight at CreateSalesOrder time, same
+  // "estimates only, server prices authoritatively" pattern already used for line pricing.
+  couponCode = '';
+  couponResult: ValidateCouponResult | null = null;
+  couponError = '';
+  applyingCoupon = false;
+  freightAmount = 0;
 
   // Style -> color -> size/qty line picker, shared between "new order" and "add line to draft".
   selectedStyle: StyleDetail | null = null;
@@ -89,7 +102,9 @@ export class SalesOrderDetailComponent implements OnInit {
     private firmService: FirmService,
     private locationService: LocationService,
     private styleService: StyleService,
-    private productService: ProductService
+    private productService: ProductService,
+    private promotionService: PromotionService,
+    private freightService: FreightService
   ) {}
 
   ngOnInit(): void {
@@ -234,6 +249,10 @@ export class SalesOrderDetailComponent implements OnInit {
         estUnitPriceTax: row.estUnitPriceTax
       });
       row.qty = 0;
+      this.refreshFreightEstimate();
+      if (this.couponResult) {
+        this.applyCoupon();
+      }
       return;
     }
 
@@ -252,6 +271,10 @@ export class SalesOrderDetailComponent implements OnInit {
 
   removeDraftLine(index: number): void {
     this.draftLines.splice(index, 1);
+    this.refreshFreightEstimate();
+    if (this.couponResult) {
+      this.applyCoupon();
+    }
   }
 
   get draftSubTotalExTax(): number {
@@ -262,12 +285,66 @@ export class SalesOrderDetailComponent implements OnInit {
     return this.draftLines.reduce((sum, l) => sum + (l.estUnitPriceTax ?? 0) * l.quantity, 0);
   }
 
+  get draftTotalQuantity(): number {
+    return this.draftLines.reduce((sum, l) => sum + l.quantity, 0);
+  }
+
+  get draftDiscountAmount(): number {
+    return this.couponResult?.valid ? this.couponResult.discountAmount : 0;
+  }
+
   get draftTotal(): number {
-    return this.draftSubTotalExTax + this.draftTaxAmount;
+    return this.draftSubTotalExTax + this.draftTaxAmount - this.draftDiscountAmount + this.freightAmount;
   }
 
   get hasUnpricedDraftLine(): boolean {
     return this.draftLines.some((l) => l.estUnitPriceExTax === null);
+  }
+
+  // Freight is estimated from the selected location + running item count as soon as both are
+  // known; recomputed whenever either changes. No calculator configured -> 0, not an error, same
+  // "free rather than blocking" behavior as the backend.
+  refreshFreightEstimate(): void {
+    if (!this.selectedLocationId || !this.draftLines.length) {
+      this.freightAmount = 0;
+      return;
+    }
+    this.freightService.calculateFreight(this.selectedLocationId, this.draftTotalQuantity).subscribe({
+      next: (result) => (this.freightAmount = result.price),
+      error: () => (this.freightAmount = 0)
+    });
+  }
+
+  applyCoupon(): void {
+    if (!this.selectedFirm || !this.couponCode) {
+      this.couponError = 'Choose a customer and enter a coupon code first.';
+      return;
+    }
+
+    this.applyingCoupon = true;
+    this.couponError = '';
+    this.promotionService
+      .validateCoupon({ couponCode: this.couponCode, firmId: this.selectedFirm.id, orderSubTotal: this.draftSubTotalExTax })
+      .subscribe({
+        next: (result) => {
+          this.applyingCoupon = false;
+          this.couponResult = result;
+          if (!result.valid) {
+            this.couponError = result.message || 'This coupon can\'t be applied.';
+          }
+        },
+        error: (err) => {
+          this.applyingCoupon = false;
+          this.couponResult = null;
+          this.couponError = err?.error?.message || "Couldn't validate this coupon.";
+        }
+      });
+  }
+
+  clearCoupon(): void {
+    this.couponCode = '';
+    this.couponResult = null;
+    this.couponError = '';
   }
 
   createOrder(): void {
@@ -293,6 +370,7 @@ export class SalesOrderDetailComponent implements OnInit {
         locationId: this.selectedLocationId,
         customerReferenceNo: this.customerReferenceNo || null,
         narration: this.narration || null,
+        couponCode: this.couponResult?.valid ? this.couponCode : null,
         lines: this.draftLines.map((l) => ({ productId: l.productId, quantity: l.quantity }))
       })
       .subscribe({
@@ -349,6 +427,30 @@ export class SalesOrderDetailComponent implements OnInit {
     this.salesOrderService.updateStatus(this.orderId, SALES_ORDER_STATUS_VALUES[target]).subscribe({
       next: (updated) => (this.order = updated),
       error: (err) => this.handleSaveError(err)
+    });
+  }
+
+  // Generate Invoice - only offered once the order has reached a billable fulfillment status
+  // and hasn't already been invoiced (see InvoiceService.InvoiceableOrderStatuses on the
+  // backend, which re-validates this regardless of what the UI shows).
+  get canGenerateInvoice(): boolean {
+    if (!this.order || this.order.isInvoiced) return false;
+    return ['Confirmed', 'Shipped', 'Delivered'].includes(this.order.statusName);
+  }
+
+  generateInvoice(): void {
+    if (!this.orderId) return;
+    this.generatingInvoice = true;
+    this.saveError = '';
+    this.salesOrderService.generateInvoice(this.orderId).subscribe({
+      next: (invoice) => {
+        this.generatingInvoice = false;
+        this.router.navigate(['/invoices', invoice.id]);
+      },
+      error: (err) => {
+        this.generatingInvoice = false;
+        this.handleSaveError(err);
+      }
     });
   }
 

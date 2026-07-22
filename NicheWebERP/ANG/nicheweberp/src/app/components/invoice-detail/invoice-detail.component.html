@@ -1,0 +1,163 @@
+<div class="page">
+  <div class="page-header d-flex align-items-center gap-3">
+    <button type="button" class="back-btn" (click)="goBack()" aria-label="Back to invoices">
+      <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+        <path d="M12.5 15L7.5 10L12.5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div>
+      <h1 class="page-title mb-1">{{ invoice ? 'INV-' + invoice.documentNumber : 'Invoice' }}</h1>
+      <p class="page-subtitle mb-0">{{ invoice?.firmName }}</p>
+    </div>
+    <span class="status-pill ms-auto" *ngIf="invoice" [ngClass]="statusClass(invoice.statusName)">
+      <span class="status-dot"></span>{{ invoice.statusName }}
+    </span>
+  </div>
+
+  <div class="data-card" *ngIf="loading">
+    <div class="state-panel">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading…</p>
+    </div>
+  </div>
+
+  <div class="data-card" *ngIf="!loading && error">
+    <div class="state-panel">
+      <p class="state-title">Couldn't load this invoice</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!loading && !error && invoice">
+    <div class="data-card profile-card mb-3">
+      <h2 class="section-title mb-3">Invoice details</h2>
+
+      <div class="profile-form-grid">
+        <div class="field-group">
+          <label class="form-label">Customer</label>
+          <span class="field-value">{{ invoice.firmName }}</span>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Source order</label>
+          <span class="field-value">
+            <a *ngIf="invoice.salesOrderId; else noOrder" href="javascript:void(0)" (click)="openOrder()">
+              SO-{{ invoice.salesOrderDocumentNumber }}
+            </a>
+            <ng-template #noOrder>—</ng-template>
+          </span>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Location</label>
+          <span class="field-value">{{ invoice.locationName || '—' }}</span>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Issue date</label>
+          <span class="field-value">{{ formatDate(invoice.issueDate) }}</span>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Due date</label>
+          <span class="field-value">{{ formatDate(invoice.dueDate) }}</span>
+        </div>
+        <div class="field-group">
+          <label class="form-label">Customer reference</label>
+          <span class="field-value">{{ invoice.customerReferenceNo || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-card mb-3">
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Style</th>
+              <th>Color</th>
+              <th>Size</th>
+              <th>Qty</th>
+              <th>Unit price</th>
+              <th>Line total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of invoice.lines">
+              <td class="cell-code">{{ l.styleCode }}</td>
+              <td class="cell-secondary">{{ l.color }}</td>
+              <td class="cell-secondary">{{ l.sizeDescription }}</td>
+              <td class="cell-secondary">{{ l.quantity }}</td>
+              <td class="cell-secondary">{{ currency(l.unitPriceExTax) }}</td>
+              <td class="cell-amount">{{ currency(l.lineTotalExTax + l.lineTotalTax) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <span class="pagination-range">
+          Subtotal {{ currency(invoice.subTotalExTax) }} + Tax {{ currency(invoice.taxAmount) }}
+        </span>
+        <span class="cell-amount">Total {{ currency(invoice.totalAmount) }}</span>
+      </div>
+    </div>
+
+    <div class="data-card profile-card mb-3">
+      <h2 class="section-title mb-3">Payments</h2>
+
+      <div class="table-scroll mb-3" *ngIf="invoice.payments.length">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Payment #</th>
+              <th>Date</th>
+              <th>Method</th>
+              <th>Narration</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of invoice.payments">
+              <td class="cell-code">PAY-{{ p.documentNumber }}</td>
+              <td class="cell-secondary">{{ formatDate(p.paymentDate) }}</td>
+              <td class="cell-secondary">{{ p.paymentMethodName || '—' }}</td>
+              <td class="cell-secondary">{{ p.narration || '—' }}</td>
+              <td class="cell-amount">{{ currency(p.amount) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="field-hint mb-3" *ngIf="!invoice.payments.length">No payments recorded yet.</p>
+
+      <div class="pagination-range mb-3">
+        Paid {{ currency(invoice.paidAmount) }} of {{ currency(invoice.totalAmount) }} —
+        <strong>{{ currency(invoice.remainingAmount) }} remaining</strong>
+      </div>
+
+      <ng-container *ngIf="invoice.remainingAmount > 0">
+        <div class="profile-form-grid">
+          <div class="field-group">
+            <label class="form-label">Amount</label>
+            <input type="number" step="0.01" class="form-control" name="paymentAmount" [(ngModel)]="paymentAmount" />
+          </div>
+          <div class="field-group">
+            <label class="form-label">Payment method</label>
+            <select class="form-control" name="paymentMethodId" [(ngModel)]="paymentMethodId">
+              <option value="">Select…</option>
+              <option *ngFor="let m of paymentMethods" [value]="m.id">{{ m.description }}</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="form-label">Narration (optional)</label>
+            <input type="text" class="form-control" name="paymentNarration" [(ngModel)]="paymentNarration" />
+          </div>
+        </div>
+
+        <div class="alert-error mt-3" *ngIf="recordError">{{ recordError }}</div>
+
+        <button type="button" class="btn-primary-action mt-3" [disabled]="recording" (click)="recordPayment()">
+          <span class="spinner" *ngIf="recording"></span>
+          {{ recording ? 'Recording…' : 'Record payment' }}
+        </button>
+      </ng-container>
+    </div>
+  </ng-container>
+</div>

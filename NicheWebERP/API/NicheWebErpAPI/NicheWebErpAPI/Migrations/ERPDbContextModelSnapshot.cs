@@ -177,6 +177,42 @@ namespace NicheWebErpAPI.Migrations
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
+            modelBuilder.Entity("NicheWebErpAPI.Models.CouponPerson", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PersonID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PromotionID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Uses")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("ValueDiscountLocalCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValueOrderLocalCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("CouponPerson", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("NicheWebErpAPI.Models.ErpRole", b =>
                 {
                     b.Property<int>("Id")
@@ -274,6 +310,36 @@ namespace NicheWebErpAPI.Migrations
                         .IsUnique();
 
                     b.ToTable("ErpUser", (string)null);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.FinancialAllocation", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("TransactionFromID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TransactionToID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("FinancialAllocation", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("NicheWebErpAPI.Models.Firm", b =>
@@ -386,6 +452,76 @@ namespace NicheWebErpAPI.Migrations
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
+            modelBuilder.Entity("NicheWebErpAPI.Models.FreightCalculator", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("CalculationMethod1")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CurrencyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool?>("TaxInclusive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("FreightCalculator", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.FreightItem", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CountryID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FreightID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal?>("RangeStart")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("TaxJurisdictionCategoryID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("FreightItem", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("NicheWebErpAPI.Models.Label", b =>
                 {
                     b.Property<Guid>("CompanyID")
@@ -419,6 +555,45 @@ namespace NicheWebErpAPI.Migrations
                     b.HasKey("CompanyID", "EntityID");
 
                     b.ToTable("Label", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.PaymentMethod", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllowPOS")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowRetail")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("AllowWholesale")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PaymentMethodType1")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SurchargePercentage")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("PaymentMethod", (string)null);
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
@@ -648,6 +823,132 @@ namespace NicheWebErpAPI.Migrations
                     b.HasKey("CompanyID", "EntityID");
 
                     b.ToTable("ProductLocation", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.Promotion", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllStyles")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("BigPictureHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BigPictureWidth")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("CategoryID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Container")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CouponCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CouponCurrentUses")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CouponCurrentValueLocalCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CouponDiscountMinimumSpend")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CouponDiscountPrintedValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("CouponIsDollar")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("CouponMaxUses")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CouponMaxUsesPerson")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("CouponMaxValueLocalCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("ForHomePage")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("InvitationOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCoupon")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LabelID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LongDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("ManualStyleSelection")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ManualUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("MarketType1")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MetaTagDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MetaTagTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RangeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SeasonID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SmallPictureHeight")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SmallPictureWidth")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("TotalOrderValueLocalCurrency")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("ValidWithOtherOffers")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("WebSiteID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("Promotion", (string)null);
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
@@ -1166,10 +1467,19 @@ namespace NicheWebErpAPI.Migrations
                     b.Property<Guid>("OtherPartyID")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("PaymentDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("PaymentMethodID")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("PricePointID")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("RepresentativeID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("SalesOrderID")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Status1")
@@ -1202,6 +1512,36 @@ namespace NicheWebErpAPI.Migrations
                     b.HasKey("CompanyID", "EntityID");
 
                     b.ToTable("TransactionBase", (string)null);
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("NicheWebErpAPI.Models.TransactionDiscount", b =>
+                {
+                    b.Property<Guid>("CompanyID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EntityID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppliesToTransactionID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("DiscountRuleID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UpdatedByID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CompanyID", "EntityID");
+
+                    b.ToTable("TransactionDiscount", (string)null);
 
                     b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });

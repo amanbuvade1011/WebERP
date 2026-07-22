@@ -1,0 +1,137 @@
+<div class="page">
+  <div class="page-header d-flex flex-column flex-md-row align-items-start align-items-md-end justify-content-between gap-3">
+    <div>
+      <h1 class="page-title mb-1">Promotions</h1>
+      <p class="page-subtitle mb-0">{{ items.length }} {{ items.length === 1 ? 'promotion' : 'promotions' }}</p>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <button type="button" class="btn-primary-action" (click)="openCreateForm()" *ngIf="!showCreateForm">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        New promotion
+      </button>
+      <button type="button" class="btn-refresh" (click)="refresh()" [disabled]="loading">
+        <svg viewBox="0 0 20 20" fill="none" width="15" height="15">
+          <path d="M16.5 10a6.5 6.5 0 1 1-2.1-4.8M16.5 3.5v4h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="data-card create-card mb-3" *ngIf="showCreateForm">
+    <form (ngSubmit)="submitCreate()" class="create-form">
+      <div class="field-group">
+        <label class="form-label">Description</label>
+        <input type="text" class="form-control" name="description" [(ngModel)]="form.description" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">Start date</label>
+        <input type="date" class="form-control" name="startDate" [(ngModel)]="form.startDate" />
+      </div>
+      <div class="field-group">
+        <label class="form-label">End date (optional)</label>
+        <input type="date" class="form-control" name="endDate" [(ngModel)]="form.endDate" />
+      </div>
+      <div class="field-group field-group-checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" name="isCoupon" [(ngModel)]="form.isCoupon" />
+          Is a coupon
+        </label>
+      </div>
+
+      <ng-container *ngIf="form.isCoupon">
+        <div class="field-group">
+          <label class="form-label">Coupon code</label>
+          <input type="text" class="form-control" name="couponCode" [(ngModel)]="form.couponCode" />
+        </div>
+        <div class="field-group field-group-checkbox">
+          <label class="checkbox-label">
+            <input type="checkbox" name="couponIsDollar" [(ngModel)]="form.couponIsDollar" />
+            Flat $ (not %)
+          </label>
+        </div>
+        <div class="field-group">
+          <label class="form-label">{{ form.couponIsDollar ? 'Discount ($)' : 'Discount (fraction, e.g. 0.05 = 5%)' }}</label>
+          <input type="number" step="0.01" class="form-control" name="couponDiscountPrintedValue" [(ngModel)]="form.couponDiscountPrintedValue" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Minimum spend</label>
+          <input type="number" step="0.01" class="form-control" name="couponDiscountMinimumSpend" [(ngModel)]="form.couponDiscountMinimumSpend" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Max uses (0 = unlimited)</label>
+          <input type="number" class="form-control" name="couponMaxUses" [(ngModel)]="form.couponMaxUses" />
+        </div>
+        <div class="field-group">
+          <label class="form-label">Max uses per customer (0 = unlimited)</label>
+          <input type="number" class="form-control" name="couponMaxUsesPerson" [(ngModel)]="form.couponMaxUsesPerson" />
+        </div>
+      </ng-container>
+
+      <div class="alert-error" *ngIf="createError">{{ createError }}</div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-action" [disabled]="creating">
+          <span class="spinner" *ngIf="creating"></span>
+          {{ creating ? 'Creating…' : 'Create promotion' }}
+        </button>
+        <button type="button" class="btn-secondary-action" (click)="cancelCreate()" [disabled]="creating">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="data-card">
+    <div class="state-panel" *ngIf="loading">
+      <span class="spinner spinner-lg"></span>
+      <p class="state-title">Loading promotions…</p>
+    </div>
+
+    <div class="state-panel" *ngIf="!loading && error">
+      <p class="state-title">Couldn't load promotions</p>
+      <button type="button" class="btn-refresh mt-2" (click)="refresh()">Try again</button>
+    </div>
+
+    <ng-container *ngIf="!loading && !error">
+      <div class="table-scroll" *ngIf="items.length; else empty">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Coupon code</th>
+              <th>Discount</th>
+              <th>Uses</th>
+              <th>Start</th>
+              <th>End</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of items">
+              <td class="cell-primary">{{ p.description }}</td>
+              <td class="cell-code">{{ p.couponCode || '—' }}</td>
+              <td class="cell-secondary">
+                <ng-container *ngIf="p.isCoupon; else notCoupon">
+                  {{ p.couponIsDollar ? currency(p.couponDiscountPrintedValue) : (p.couponDiscountPrintedValue * 100) + '%' }}
+                </ng-container>
+                <ng-template #notCoupon>—</ng-template>
+              </td>
+              <td class="cell-secondary">
+                {{ p.couponCurrentUses }}{{ p.couponMaxUses > 0 ? ' / ' + p.couponMaxUses : '' }}
+              </td>
+              <td class="cell-secondary">{{ formatDate(p.startDate) }}</td>
+              <td class="cell-secondary">{{ formatDate(p.endDate) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ng-template #empty>
+        <div class="state-panel">
+          <p class="state-title">No promotions found</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>

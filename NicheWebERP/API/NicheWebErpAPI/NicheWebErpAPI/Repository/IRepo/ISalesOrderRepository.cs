@@ -44,6 +44,7 @@ namespace NicheWebErpAPI.Repository.IRepo
         Task AddHeaderAsync(TransactionBase header);
         Task AddLineAsync(TransactionLine line);
         Task AddQuantityAsync(TransactionQuantity quantity);
+        Task AddTransactionDiscountAsync(TransactionDiscount discount);
         void UpdateHeader(TransactionBase header);
         void UpdateLine(TransactionLine line);
         void RemoveLine(TransactionLine line);

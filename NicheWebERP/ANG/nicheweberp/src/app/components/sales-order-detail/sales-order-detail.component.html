@@ -52,7 +52,12 @@
           </div>
           <div class="field-group">
             <label class="form-label">Location</label>
-            <select class="form-control" name="location" [(ngModel)]="selectedLocationId" (ngModelChange)="resetPicker()">
+            <select
+              class="form-control"
+              name="location"
+              [(ngModel)]="selectedLocationId"
+              (ngModelChange)="resetPicker(); refreshFreightEstimate()"
+            >
               <option value="">Select a location…</option>
               <option *ngFor="let l of locations" [value]="l.id">{{ l.name }}</option>
             </select>
@@ -73,6 +78,35 @@
         <div class="field-hint mt-2" *ngIf="selectedFirm">
           Price point: {{ selectedFirm.pricePointName || 'None assigned' }}
           <ng-container *ngIf="selectedFirm.creditLimit">· Credit limit: {{ currency(selectedFirm.creditLimit) }}</ng-container>
+        </div>
+
+        <div class="profile-form-grid mt-3">
+          <div class="field-group">
+            <label class="form-label">Coupon code (optional)</label>
+            <div class="d-flex gap-2">
+              <input
+                type="text"
+                class="form-control"
+                name="couponCode"
+                [(ngModel)]="couponCode"
+                [disabled]="!!couponResult?.valid"
+              />
+              <button
+                type="button"
+                class="btn-secondary-action"
+                *ngIf="!couponResult?.valid"
+                [disabled]="applyingCoupon || !couponCode"
+                (click)="applyCoupon()"
+              >
+                {{ applyingCoupon ? 'Checking…' : 'Apply' }}
+              </button>
+              <button type="button" class="btn-secondary-action" *ngIf="couponResult?.valid" (click)="clearCoupon()">Remove</button>
+            </div>
+            <span class="field-hint mt-1" *ngIf="couponResult?.valid">
+              Coupon applied: -{{ currency(couponResult!.discountAmount) }}
+            </span>
+            <span class="field-hint mt-1" *ngIf="couponError">{{ couponError }}</span>
+          </div>
         </div>
       </ng-container>
 
@@ -104,7 +138,7 @@
           </div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="order && availableTransitions.length">
+        <div class="d-flex gap-2 flex-wrap mt-3" *ngIf="order && (availableTransitions.length || canGenerateInvoice || order.isInvoiced)">
           <button
             type="button"
             class="btn-secondary-action"
@@ -113,6 +147,17 @@
           >
             Mark as {{ t }}
           </button>
+          <button
+            type="button"
+            class="btn-primary-action"
+            *ngIf="canGenerateInvoice"
+            [disabled]="generatingInvoice"
+            (click)="generateInvoice()"
+          >
+            <span class="spinner" *ngIf="generatingInvoice"></span>
+            {{ generatingInvoice ? 'Generating…' : 'Generate Invoice' }}
+          </button>
+          <span class="field-hint" *ngIf="order.isInvoiced">Already invoiced.</span>
         </div>
       </ng-template>
     </div>
@@ -219,8 +264,10 @@
       </ng-template>
 
       <div class="pagination-bar" *ngIf="draftLines.length">
-        <span class="pagination-range" *ngIf="hasUnpricedDraftLine">
-          Some lines have no price set for this customer's price point — the order total shown is an estimate.
+        <span class="pagination-range">
+          <ng-container *ngIf="hasUnpricedDraftLine">Some lines have no price set — the total shown is an estimate. </ng-container>
+          <ng-container *ngIf="draftDiscountAmount > 0">Discount -{{ currency(draftDiscountAmount) }} · </ng-container>
+          <ng-container *ngIf="freightAmount > 0">Freight {{ currency(freightAmount) }}</ng-container>
         </span>
         <span class="cell-amount">Est. total: {{ currency(draftTotal) }}</span>
       </div>
@@ -285,7 +332,11 @@
       </ng-template>
 
       <div class="pagination-bar">
-        <span class="pagination-range">{{ order.totalQuantities }} units</span>
+        <span class="pagination-range">
+          {{ order.totalQuantities }} units
+          <ng-container *ngIf="order.discountAmount > 0"> · Discount -{{ currency(order.discountAmount) }}</ng-container>
+          <ng-container *ngIf="order.freightAmount > 0"> · Freight {{ currency(order.freightAmount) }}</ng-container>
+        </span>
         <span class="cell-amount">
           Subtotal {{ currency(order.subTotalExTax) }} + Tax {{ currency(order.taxAmount) }} = Total {{ currency(order.totalAmount) }}
         </span>

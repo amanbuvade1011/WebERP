@@ -42,6 +42,19 @@ namespace NicheWebErpAPI
         public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
         public DbSet<TransactionQuantity> TransactionQuantities => Set<TransactionQuantity>();
 
+        // New (Sprint 06) - Invoicing & Payments. PaymentMethod is a plain lookup table;
+        // FinancialAllocation links a Payment-class TransactionBase to the Invoice-class
+        // TransactionBase it's paying off. See docs/ai-plan/01-database-map.md.
+        public DbSet<PaymentMethod> PaymentMethods => Set<PaymentMethod>();
+        public DbSet<FinancialAllocation> FinancialAllocations => Set<FinancialAllocation>();
+
+        // New (Sprint 07) - Promotions & Freight.
+        public DbSet<Promotion> Promotions => Set<Promotion>();
+        public DbSet<CouponPerson> CouponPersons => Set<CouponPerson>();
+        public DbSet<FreightCalculator> FreightCalculators => Set<FreightCalculator>();
+        public DbSet<FreightItem> FreightItems => Set<FreightItem>();
+        public DbSet<TransactionDiscount> TransactionDiscounts => Set<TransactionDiscount>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Every table in this DB uses a composite key: (CompanyID, EntityID).
@@ -221,6 +234,48 @@ namespace NicheWebErpAPI
             modelBuilder.Entity<TransactionQuantity>(e =>
             {
                 e.ToTable("TransactionQuantity", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<PaymentMethod>(e =>
+            {
+                e.ToTable("PaymentMethod", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<FinancialAllocation>(e =>
+            {
+                e.ToTable("FinancialAllocation", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<Promotion>(e =>
+            {
+                e.ToTable("Promotion", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<CouponPerson>(e =>
+            {
+                e.ToTable("CouponPerson", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<FreightCalculator>(e =>
+            {
+                e.ToTable("FreightCalculator", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<FreightItem>(e =>
+            {
+                e.ToTable("FreightItem", tb => tb.UseSqlOutputClause(false));
+                e.HasKey(x => new { x.CompanyID, x.EntityID });
+            });
+
+            modelBuilder.Entity<TransactionDiscount>(e =>
+            {
+                e.ToTable("TransactionDiscount", tb => tb.UseSqlOutputClause(false));
                 e.HasKey(x => new { x.CompanyID, x.EntityID });
             });
         }

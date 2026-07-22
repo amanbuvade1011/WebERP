@@ -74,6 +74,20 @@ builder.Services.AddScoped<ITradingTermsService, TradingTermsService>();
 builder.Services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
 builder.Services.AddScoped<ISalesOrderService, SalesOrderService>();
 
+// Sprint 06 - Invoicing & Payments
+builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPaymentMethodRepository, PaymentMethodRepository>();
+builder.Services.AddScoped<IPaymentMethodService, PaymentMethodService>();
+
+// Sprint 07 - Promotions & Freight
+builder.Services.AddScoped<IPromotionRepository, PromotionRepository>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<IFreightRepository, FreightRepository>();
+builder.Services.AddScoped<IFreightService, FreightService>();
+
 var jwtSection = builder.Configuration.GetSection("Jwt");
 builder.Services
     .AddAuthentication(options =>

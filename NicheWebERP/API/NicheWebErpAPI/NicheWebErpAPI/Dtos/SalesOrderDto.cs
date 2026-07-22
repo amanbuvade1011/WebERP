@@ -24,6 +24,11 @@ namespace NicheWebErpAPI.Dtos
         public string StatusName { get; set; } = null!;
         public int TotalQuantities { get; set; }
         public decimal TotalAmount { get; set; }
+
+        // Added Sprint 06 - billing status is an independent axis from fulfillment Status1
+        // (a Shipped order can still need invoicing), so it reuses the previously-unused
+        // Status2 column rather than extending the Status1 enum. See InvoiceService.
+        public bool IsInvoiced { get; set; }
     }
 
     public class SalesOrderDetailDto
@@ -45,6 +50,11 @@ namespace NicheWebErpAPI.Dtos
         public decimal TaxAmount { get; set; }
         public decimal TotalAmount { get; set; }
         public int TotalQuantities { get; set; }
+        public bool IsInvoiced { get; set; }
+        // Added Sprint 07 - already folded into TotalAmount, exposed separately so the UI can
+        // show them as their own line items on the order.
+        public decimal DiscountAmount { get; set; }
+        public decimal FreightAmount { get; set; }
         public List<SalesOrderLineDto> Lines { get; set; } = new();
     }
 
@@ -68,6 +78,7 @@ namespace NicheWebErpAPI.Dtos
         public Guid LocationId { get; set; }
         public string? CustomerReferenceNo { get; set; }
         public string? Narration { get; set; }
+        public string? CouponCode { get; set; }
         public List<CreateSalesOrderLineDto> Lines { get; set; } = new();
     }
 

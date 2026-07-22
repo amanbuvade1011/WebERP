@@ -13,7 +13,7 @@ import {
   RecentActivityItem
 } from '../models/dashboard.model';
 import { SalesOrderListItem } from '../models/sales-order.model';
-import { Invoice } from '../models/invoice.model';
+import { InvoiceListItem } from '../models/invoice.model';
 
 export interface DashboardData {
   kpis: KpiStat[];
@@ -48,14 +48,15 @@ export class DashboardService {
   getDashboardData(): Observable<DashboardData> {
     return forkJoin({
       orderPage: this.salesOrderService.getAllOrders({ page: 1, pageSize: 200 }),
-      invoices: this.invoiceService.getAllInvoices(),
+      invoicePage: this.invoiceService.getAllInvoices({ page: 1, pageSize: 200 }),
       products: this.productService.getAllProducts({ page: 1, pageSize: 200 })
     }).pipe(
-      map(({ orderPage, invoices, products: productPage }) => {
+      map(({ orderPage, invoicePage, products: productPage }) => {
         const now = new Date();
         const products = productPage.items;
         const totalProductCount = productPage.totalCount;
         const orders = orderPage.items.filter((o): o is SalesOrderListItem & { orderDate: string } => !!o.orderDate);
+        const invoices = invoicePage.items.filter((i): i is InvoiceListItem & { issueDate: string } => !!i.issueDate);
 
         const revenueLast30 = orders
           .filter((o) => daysBetween(o.orderDate, now) < 30)
@@ -73,9 +74,9 @@ export class DashboardService {
           return d >= 30 && d < 60 && ['Draft', 'Confirmed', 'Shipped'].includes(o.statusName);
         });
 
-        const outstandingInvoices = invoices.filter((i) => i.status === 'Pending' || i.status === 'Overdue');
-        const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + i.amount, 0);
-        const overdueAmount = invoices.filter((i) => i.status === 'Overdue').reduce((sum, i) => sum + i.amount, 0);
+        const outstandingInvoices = invoices.filter((i) => i.statusName === 'Pending' || i.statusName === 'Overdue');
+        const outstandingAmount = outstandingInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
+        const overdueAmount = invoices.filter((i) => i.statusName === 'Overdue').reduce((sum, i) => sum + i.totalAmount, 0);
 
         const weeklyTrend = this.bucketWeekly(orders, now, 8);
 
@@ -101,7 +102,7 @@ export class DashboardService {
             value: this.currency(outstandingAmount),
             delta: overdueAmount > 0 ? Math.round((overdueAmount / Math.max(outstandingAmount, 1)) * 100) : 0,
             deltaLabel: 'overdue share',
-            trend: this.bucketWeekly(invoices.map((i) => ({ orderDate: i.issueDate, totalAmount: i.amount })), now, 8),
+            trend: this.bucketWeekly(invoices.map((i) => ({ orderDate: i.issueDate, totalAmount: i.totalAmount })), now, 8),
             positiveIsGood: false
           },
           {
@@ -136,13 +137,13 @@ export class DashboardService {
         }));
         const cancelledOrders = orders.filter((o) => o.statusName === 'Cancelled').length;
 
-        const invStatusOrder: InvoiceStatusBreakdown['status'][] = ['Paid', 'Pending', 'Overdue', 'Draft'];
+        const invStatusOrder: InvoiceStatusBreakdown['status'][] = ['Paid', 'Pending', 'Overdue'];
         const invoiceStatus: InvoiceStatusBreakdown[] = invStatusOrder.map((status) => {
-          const matching = invoices.filter((i) => i.status === status);
+          const matching = invoices.filter((i) => i.statusName === status);
           return {
             status,
             count: matching.length,
-            amount: matching.reduce((sum, i) => sum + i.amount, 0)
+            amount: matching.reduce((sum, i) => sum + i.totalAmount, 0)
           };
         });
 
@@ -210,7 +211,10 @@ export class DashboardService {
     return points;
   }
 
-  private buildRecentActivity(orders: (SalesOrderListItem & { orderDate: string })[], invoices: Invoice[]): RecentActivityItem[] {
+  private buildRecentActivity(
+    orders: (SalesOrderListItem & { orderDate: string })[],
+    invoices: (InvoiceListItem & { issueDate: string })[]
+  ): RecentActivityItem[] {
     const orderItems: RecentActivityItem[] = orders.slice(0, 5).map((o) => ({
       id: `SO-${o.documentNumber}`,
       kind: 'order',
@@ -220,12 +224,12 @@ export class DashboardService {
       amount: o.totalAmount
     }));
     const invoiceItems: RecentActivityItem[] = invoices.slice(0, 5).map((i) => ({
-      id: i.invoiceNo,
+      id: `INV-${i.documentNumber}`,
       kind: 'invoice',
-      title: `${i.invoiceNo} · ${i.customer}`,
-      subtitle: `${i.status} · due ${new Date(i.dueDate).toLocaleDateString()}`,
+      title: `INV-${i.documentNumber} · ${i.firmName}`,
+      subtitle: `${i.statusName}${i.dueDate ? ' · due ' + new Date(i.dueDate).toLocaleDateString() : ''}`,
       timestamp: i.issueDate,
-      amount: i.amount
+      amount: i.totalAmount
     }));
     return [...orderItems, ...invoiceItems]
       .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))

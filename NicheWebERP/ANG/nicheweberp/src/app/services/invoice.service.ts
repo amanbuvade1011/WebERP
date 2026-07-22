@@ -1,45 +1,38 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
-import { Invoice, InvoiceStatus } from '../models/invoice.model';
-import { CUSTOMERS, daysAgoIso, mulberry32, pick } from './mock-data.util';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { ApiURLService } from './ApiURLService.service';
+import { PagedResult } from '../models/paged-result.model';
+import { InvoiceDetail, InvoiceListItem, RecordPaymentRequest } from '../models/invoice.model';
 
-const STATUS_WEIGHTS: readonly InvoiceStatus[] = [
-  'Paid', 'Paid', 'Paid', 'Paid', 'Paid', 'Paid',
-  'Pending', 'Pending', 'Pending',
-  'Overdue', 'Overdue',
-  'Draft'
-];
-
-function addDaysIso(iso: string, days: number): string {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + days);
-  return d.toISOString();
+export interface InvoiceQuery {
+  page: number;
+  pageSize: number;
+  status?: number;
+  firmId?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
-
-function buildInvoices(): Invoice[] {
-  const rng = mulberry32(20260713);
-  const invoices: Invoice[] = [];
-  for (let i = 1; i <= 112; i++) {
-    const issueDate = daysAgoIso(rng, 110);
-    invoices.push({
-      invoiceNo: `INV-${(20260000 + i).toString()}`,
-      customer: pick(rng, CUSTOMERS),
-      orderRef: `SO-${(20260000 + Math.ceil(rng() * 138)).toString()}`,
-      issueDate,
-      dueDate: addDaysIso(issueDate, 30),
-      amount: Math.round((150 + rng() * 4200) * 100) / 100,
-      status: pick(rng, STATUS_WEIGHTS)
-    });
-  }
-  return invoices.sort((a, b) => (a.issueDate < b.issueDate ? 1 : -1));
-}
-
-const MOCK_INVOICES = buildInvoices();
 
 @Injectable({ providedIn: 'root' })
 export class InvoiceService {
-  getAllInvoices(): Observable<Invoice[]> {
-    return of(MOCK_INVOICES).pipe(delay(350));
+  constructor(private http: HttpClient) {}
+
+  getAllInvoices(query: InvoiceQuery): Observable<PagedResult<InvoiceListItem>> {
+    let params = new HttpParams().set('page', query.page).set('pageSize', query.pageSize);
+    if (query.status !== undefined) params = params.set('status', query.status);
+    if (query.firmId) params = params.set('firmId', query.firmId);
+    if (query.dateFrom) params = params.set('dateFrom', query.dateFrom);
+    if (query.dateTo) params = params.set('dateTo', query.dateTo);
+
+    return this.http.get<PagedResult<InvoiceListItem>>(`${ApiURLService.BASE_URL}/Invoices/GetAllInvoices`, { params });
+  }
+
+  getInvoiceById(id: string): Observable<InvoiceDetail> {
+    return this.http.get<InvoiceDetail>(`${ApiURLService.BASE_URL}/Invoices/GetInvoiceById/${id}`);
+  }
+
+  recordPayment(request: RecordPaymentRequest): Observable<InvoiceDetail> {
+    return this.http.post<InvoiceDetail>(`${ApiURLService.BASE_URL}/Payments/RecordPayment`, request);
   }
 }

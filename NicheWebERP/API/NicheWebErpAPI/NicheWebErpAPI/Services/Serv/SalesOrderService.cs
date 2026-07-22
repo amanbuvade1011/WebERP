@@ -9,6 +9,8 @@ namespace NicheWebErpAPI.Services.Serv
     {
         private readonly ISalesOrderRepository _repository;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IPromotionService _promotionService;
+        private readonly IFreightService _freightService;
 
         // Draft is the only status new lines/quantities may be added to or removed from. Allowed
         // forward transitions decided in Sprint 05 - see docs/ai-plan/sprints/sprint-05-sales-orders.md.
@@ -21,10 +23,16 @@ namespace NicheWebErpAPI.Services.Serv
             [SalesOrderStatus.Cancelled] = Array.Empty<SalesOrderStatus>()
         };
 
-        public SalesOrderService(ISalesOrderRepository repository, ICurrentUserService currentUserService)
+        public SalesOrderService(
+            ISalesOrderRepository repository,
+            ICurrentUserService currentUserService,
+            IPromotionService promotionService,
+            IFreightService freightService)
         {
             _repository = repository;
             _currentUserService = currentUserService;
+            _promotionService = promotionService;
+            _freightService = freightService;
         }
 
         public Task<PagedResultDto<SalesOrderListItemDto>> GetPagedAsync(
@@ -85,7 +93,24 @@ namespace NicheWebErpAPI.Services.Serv
                 totalQuantities += lineDto.Quantity;
             }
 
-            var orderTotal = subTotalExTax + taxAmount;
+            // Sprint 07: coupon discount and freight, both applied before the credit-limit check
+            // below so it evaluates the real final total, not the pre-adjustment one.
+            decimal discountAmount = 0;
+            Guid? appliedPromotionId = null;
+            if (!string.IsNullOrWhiteSpace(dto.CouponCode))
+            {
+                var couponResult = await _promotionService.ValidateCouponAsync(dto.CouponCode, dto.FirmId, subTotalExTax);
+                if (!couponResult.Valid)
+                {
+                    throw new InvalidOperationException(couponResult.Message ?? "This coupon can't be applied.");
+                }
+                discountAmount = couponResult.DiscountAmount;
+                appliedPromotionId = couponResult.PromotionId;
+            }
+
+            var freightAmount = await _freightService.CalculateAsync(dto.LocationId, totalQuantities, null);
+
+            var orderTotal = subTotalExTax + taxAmount - discountAmount + freightAmount;
 
             // Acceptance: Firm.CreditLimit is checked before order creation. Live data shows only
             // 11 of 3,644 firms have a nonzero CreditLimit (checked 2026-07-19) - treating 0 as
@@ -139,6 +164,52 @@ namespace NicheWebErpAPI.Services.Serv
             foreach (var quantity in quantityEntities)
             {
                 await _repository.AddQuantityAsync(quantity);
+            }
+
+            if (appliedPromotionId.HasValue && discountAmount > 0)
+            {
+                await _repository.AddTransactionDiscountAsync(new TransactionDiscount
+                {
+                    CompanyID = companyId,
+                    EntityID = Guid.NewGuid(),
+                    AppliesToTransactionID = headerId,
+                    DiscountRuleID = null,
+                    Sequence = 1,
+                    LastUpdated = now,
+                    UpdatedByID = updatedById
+                });
+                await _repository.AddLineAsync(new TransactionLine
+                {
+                    CompanyID = companyId,
+                    EntityID = Guid.NewGuid(),
+                    TransactionID = headerId,
+                    Description = $"Coupon {dto.CouponCode}",
+                    LineAmountExTax1 = -discountAmount,
+                    EntityClassName = "DiscountLine",
+                    LineTaxAmount1 = 0,
+                    LastUpdated = now,
+                    UpdatedByID = updatedById
+                });
+
+                // Not saved yet - staged onto the same tracked context as the rest of this order
+                // and flushed together by the SaveChangesAsync call below.
+                await _promotionService.RecordUsageAsync(appliedPromotionId.Value, dto.FirmId, discountAmount, subTotalExTax);
+            }
+
+            if (freightAmount > 0)
+            {
+                await _repository.AddLineAsync(new TransactionLine
+                {
+                    CompanyID = companyId,
+                    EntityID = Guid.NewGuid(),
+                    TransactionID = headerId,
+                    Description = "Freight",
+                    LineAmountExTax1 = freightAmount,
+                    EntityClassName = "FreightLine",
+                    LineTaxAmount1 = 0,
+                    LastUpdated = now,
+                    UpdatedByID = updatedById
+                });
             }
 
             await _repository.SaveChangesAsync();

@@ -11,10 +11,12 @@ namespace NicheWebErpAPI.Controllers
     public class SalesOrdersController : ControllerBase
     {
         private readonly ISalesOrderService _salesOrderService;
+        private readonly IInvoiceService _invoiceService;
 
-        public SalesOrdersController(ISalesOrderService salesOrderService)
+        public SalesOrdersController(ISalesOrderService salesOrderService, IInvoiceService invoiceService)
         {
             _salesOrderService = salesOrderService;
+            _invoiceService = invoiceService;
         }
 
         // GET api/SalesOrders/GetAllSalesOrders
@@ -101,6 +103,24 @@ namespace NicheWebErpAPI.Controllers
             try
             {
                 return Ok(await _salesOrderService.UpdateLineAsync(id, lineId, dto));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // POST api/SalesOrders/{id}/GenerateInvoice
+        [HttpPost("{id:guid}/GenerateInvoice")]
+        public async Task<ActionResult<InvoiceDetailDto>> GenerateInvoice(Guid id)
+        {
+            try
+            {
+                return Ok(await _invoiceService.GenerateFromOrderAsync(id));
             }
             catch (KeyNotFoundException ex)
             {

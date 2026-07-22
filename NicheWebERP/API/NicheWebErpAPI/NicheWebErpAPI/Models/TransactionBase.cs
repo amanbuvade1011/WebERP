@@ -44,6 +44,14 @@ namespace NicheWebErpAPI.Models
         public string? CustomerReferenceNo { get; set; }
         public Guid EmployeeID { get; set; }
 
+        // Added Sprint 06 (Invoicing & Payments) - real columns, confirmed live via
+        // INFORMATION_SCHEMA.COLUMNS. SalesOrderID links an invoice back to its source order
+        // (invoice -> order, e.g. Amount1 above is the invoice's own total, not the order's).
+        // PaymentMethodID/PaymentDueDate are used by Payment and Invoice rows respectively.
+        public Guid? SalesOrderID { get; set; }
+        public Guid? PaymentMethodID { get; set; }
+        public DateTime? PaymentDueDate { get; set; }
+
         public DateTime? LastUpdated { get; set; }
         public Guid? UpdatedByID { get; set; }
     }
